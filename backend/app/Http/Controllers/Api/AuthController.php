@@ -442,20 +442,20 @@ class AuthController extends Controller
 
         $email = strtolower(trim($request->email));
 
-        // Check if user previously deleted their account
-        $deletion = AccountDeletion::whereRaw('LOWER(TRIM(email)) = ?', [$email])->latest()->first();
-        if ($deletion) {
-            return response()->json([
-                'success' => false,
-                'account_deleted' => true,
-                'field' => 'email',
-                'message' => 'This account was previously deleted. Please sign up to create a new account.',
-            ], 403);
-        }
-
-        // Check if user exists
+        // Check if user exists FIRST
         $user = User::whereRaw('LOWER(TRIM(email)) = ?', [$email])->first();
         if (!$user) {
+            // If no active user, check if they deleted it previously
+            $deletion = AccountDeletion::whereRaw('LOWER(TRIM(email)) = ?', [$email])->latest()->first();
+            if ($deletion) {
+                return response()->json([
+                    'success' => false,
+                    'account_deleted' => true,
+                    'field' => 'email',
+                    'message' => 'This account was previously deleted. Please sign up to create a new account.',
+                ], 403);
+            }
+
             return response()->json([
                 'success' => false,
                 'field' => 'email',

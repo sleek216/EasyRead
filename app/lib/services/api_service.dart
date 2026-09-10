@@ -4,14 +4,15 @@ import '../models/book_item.dart';
 
 class ApiService {
   static const List<String> _baseUrls = [
-    'https://easyread.aibit.services/api', // Production Server
+    // 'https://easyread.aibit.services/api', // Production Server
     'http://172.31.2.125:8000/api', // Current Active LAN Wi-Fi IP
     'http://172.31.2.46:8000/api',  // Previous LAN Wi-Fi IP
     'http://127.0.0.1:8000/api',    // Web / Desktop / Localhost
     'http://10.0.2.2:8000/api',     // Android Emulator
   ];
 
-  static String _activeBaseUrl = 'https://easyread.aibit.services/api';
+  // static String _activeBaseUrl = 'https://easyread.aibit.services/api';
+  static String _activeBaseUrl = 'http://172.31.2.125:8000/api';
   static String get baseUrl => _activeBaseUrl;
   
   static String? authToken;
