@@ -1,0 +1,2758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EasyWord</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;0,7..72,600;1,7..72,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16241D;
+    --ink-soft:#22362B;
+    --paper:#EFE6D0;
+    --paper-soft:#F6F0E1;
+    --gold:#B8873B;
+    --gold-soft:#D8B679;
+    --moss:#4B6B4A;
+    --plum:#6E3B4E;
+    --text-dark:#241F17;
+    --text-mute:#6b6154;
+    --line:rgba(36,31,23,0.12);
+    --shadow: 0 18px 40px -14px rgba(22,36,29,0.35);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Inter',sans-serif;
+    background:
+      radial-gradient(circle at 20% 15%, rgba(184,135,59,0.10), transparent 45%),
+      radial-gradient(circle at 85% 80%, rgba(75,107,74,0.14), transparent 50%),
+      var(--ink);
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:32px 16px;
+  }
+
+  /* ---------- Ambient stage ---------- */
+  .stage{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:18px;
+  }
+  .stage-label{
+    font-family:'Inter';
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    font-size:11px;
+    color: rgba(239,230,208,0.55);
+    text-align:center;
+  }
+
+  /* ---------- Phone frame ---------- */
+  .phone{
+    width:380px;
+    height:790px;
+    background: var(--paper);
+    border-radius:44px;
+    box-shadow: var(--shadow), 0 0 0 10px #0d1712, 0 0 0 11px rgba(184,135,59,0.35);
+    overflow:hidden;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+  }
+  .notch{
+    position:absolute;
+    top:10px; left:50%;
+    transform:translateX(-50%);
+    width:120px; height:22px;
+    background:#0d1712;
+    border-radius:14px;
+    z-index:50;
+  }
+  .screen{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    overflow:hidden;
+  }
+  .app-topbar{
+    padding:44px 22px 12px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-shrink:0;
+  }
+  .wordmark{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:22px;
+    color:var(--text-dark);
+    display:flex;
+    align-items:baseline;
+    gap:3px;
+  }
+  .wordmark .dot{ color:var(--gold); }
+
+  .icon-btn{
+    width:34px;height:34px;
+    border-radius:50%;
+    border:1px solid var(--line);
+    background:var(--paper-soft);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--text-dark);
+    cursor:pointer;
+  }
+
+  /* ---------- Bottom tab bar ---------- */
+  .tabbar{
+    flex-shrink:0;
+    display:flex;
+    border-top:1px solid var(--line);
+    background: var(--paper-soft);
+    padding:10px 6px 20px;
+  }
+  .tab{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    font-size:10.5px;
+    font-family:'Inter';
+    font-weight:600;
+    color:var(--text-mute);
+    cursor:pointer;
+    padding:4px 0;
+    letter-spacing:.02em;
+  }
+  .tab.active{ color: var(--moss); }
+  .tab svg{ width:20px;height:20px; }
+
+  /* ================= LIBRARY ================= */
+  .library-scroll{
+    flex:1;
+    overflow-y:auto;
+    padding: 4px 22px 20px;
+  }
+  .section-title{
+    font-family:'Fraunces', serif;
+    font-size:15px;
+    font-weight:600;
+    color:var(--text-dark);
+    margin: 16px 0 10px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .section-title .see-all{
+    font-family:'Inter'; font-size:11px; font-weight:600;
+    color: var(--moss); text-transform:uppercase; letter-spacing:.05em;
+  }
+  .shelf{
+    display:flex;
+    gap:12px;
+    overflow-x:auto;
+    padding-bottom:6px;
+    margin: 0 -22px;
+    padding-left:22px;
+    padding-right:22px;
+  }
+  .shelf::-webkit-scrollbar{display:none;}
+  .book-card{
+    flex-shrink:0;
+    width:104px;
+    cursor:pointer;
+  }
+  .cover{
+    width:104px;height:140px;
+    border-radius:8px;
+    display:flex;
+    align-items:flex-end;
+    padding:10px;
+    color:#fff;
+    font-family:'Fraunces', serif;
+    font-size:13px;
+    font-weight:600;
+    line-height:1.15;
+    box-shadow: 0 8px 18px -8px rgba(0,0,0,0.35);
+    position:relative;
+    overflow:hidden;
+  }
+  .cover::after{
+    content:'';
+    position:absolute; inset:0;
+    background:linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.45) 100%);
+  }
+  .cover span{ position:relative; z-index:2; }
+  .book-meta{
+    margin-top:7px;
+    font-size:11px;
+    color:var(--text-mute);
+    font-family:'Inter';
+  }
+  .progress-track{
+    height:3px; background:var(--line); border-radius:2px; margin-top:6px; overflow:hidden;
+  }
+  .progress-fill{ height:100%; background:var(--gold); }
+
+  .tag-row{ display:flex; gap:8px; overflow-x:auto; margin: 2px -22px 4px; padding:0 22px 4px;}
+  .tag-row::-webkit-scrollbar{display:none;}
+  .tag-pill{
+    flex-shrink:0;
+    padding:6px 13px;
+    border-radius:999px;
+    background:var(--paper-soft);
+    border:1px solid var(--line);
+    font-size:11.5px;
+    font-family:'Inter'; font-weight:600;
+    color:var(--text-dark);
+    cursor:pointer;
+  }
+  .tag-pill.active{ background:var(--moss); color:#fff; border-color:var(--moss); }
+
+  .import-row{
+    display:flex; gap:10px; margin-top:6px;
+  }
+  .import-chip{
+    flex:1;
+    border:1.5px dashed rgba(36,31,23,0.25);
+    border-radius:12px;
+    padding:14px 8px;
+    text-align:center;
+    font-size:11px;
+    font-family:'Inter'; font-weight:600;
+    color:var(--text-mute);
+    cursor:pointer;
+  }
+  .import-chip svg{ display:block; margin:0 auto 6px; width:18px;height:18px; }
+
+  .list-item{
+    display:flex; align-items:center; gap:12px;
+    padding:10px 0;
+    border-bottom:1px solid var(--line);
+    cursor:pointer;
+  }
+  .list-thumb{
+    width:40px;height:52px;border-radius:5px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;color:#fff;
+  }
+  .list-text .t{ font-family:'Fraunces',serif; font-weight:600; font-size:13.5px; color:var(--text-dark); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .list-text .s{ font-family:'Inter'; font-size:11px; color:var(--text-mute); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+  .fav-star{
+    position:absolute; top:8px; right:8px; z-index:3;
+    width:22px;height:22px; color:#fff; opacity:0.85;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));
+  }
+  .fav-star svg{ width:100%; height:100%; }
+  .fav-star.active{ color: var(--gold-soft); opacity:1; }
+  .fav-star-inline{
+    width:30px;height:30px;flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    color: var(--text-mute); cursor:pointer;
+  }
+  .fav-star-inline svg{ width:16px;height:16px; }
+  .fav-star-inline.active{ color: var(--gold); }
+  .see-all.active{ color: var(--gold); }
+
+  /* ================= READER ================= */
+  .reader-screen{ display:none; flex-direction:column; height:100%; }
+  .reader-screen.active{ display:flex; }
+  .reader-top{
+    padding:44px 18px 10px;
+    display:flex; align-items:center; justify-content:space-between;
+    flex-shrink:0;
+  }
+  .reader-top .mid{
+    font-family:'Inter'; font-size:11px; font-weight:600;
+    color:var(--text-mute); text-transform:uppercase; letter-spacing:.06em;
+  }
+  .reader-tools{ display:flex; gap:8px; }
+
+  .reader-body{
+    flex:1;
+    overflow-y:auto;
+    padding: 6px 26px 40px;
+    position:relative;
+  }
+  .reader-title{
+    font-family:'Fraunces', serif;
+    font-size:22px;
+    font-weight:600;
+    color:var(--text-dark);
+    margin: 6px 0 2px;
+    line-height:1.2;
+  }
+  .reader-byline{
+    font-family:'Inter'; font-size:11.5px; color:var(--text-mute); margin-bottom:18px;
+  }
+  .reader-text{
+    font-family:'Literata', serif;
+    color:var(--text-dark);
+    line-height:1.85;
+  }
+  .reader-text p{ margin:0 0 18px; }
+  .w{
+    cursor:pointer;
+    border-radius:3px;
+    transition: background .15s ease;
+    padding: 0 1px;
+    position:relative;
+  }
+  .w:hover{ background: rgba(184,135,59,0.14); }
+  .w.tapped{
+    background: rgba(184,135,59,0.28);
+  }
+  .w.tapped::after{
+    content:'';
+    position:absolute;
+    left:0; right:0; bottom:-2px;
+    height:2px;
+    background:var(--gold);
+    border-radius:2px;
+    animation: inkdraw .28s ease forwards;
+    transform-origin:left;
+  }
+  @keyframes inkdraw{
+    from{ transform: scaleX(0); }
+    to{ transform: scaleX(1); }
+  }
+  .w.saved-word{ background: rgba(75,107,74,0.16); }
+
+  /* ---------- Intelligent Reading Assistant ---------- */
+  .passage{ margin-bottom:6px; }
+  .passage p{ margin-bottom:8px; }
+  .assist-trigger{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    font-family:'Inter'; font-size:10.5px; font-weight:700;
+    color: var(--gold);
+    cursor:pointer;
+    padding:2px 0 14px;
+    letter-spacing:.01em;
+  }
+  .assist-trigger svg{ width:11px; height:11px; flex-shrink:0; }
+  .assist-toolbar{
+    max-height:0;
+    overflow:hidden;
+    transition: max-height .2s ease;
+    display:flex; flex-wrap:wrap; gap:6px;
+  }
+  .assist-toolbar.open{ max-height:80px; margin-bottom:12px; }
+  .assist-btn{
+    font-family:'Inter'; font-size:10.5px; font-weight:600;
+    background: var(--paper-soft);
+    border:1px solid var(--line);
+    color: var(--text-dark);
+    padding:6px 11px;
+    border-radius:999px;
+    cursor:pointer;
+    display:flex; align-items:center; gap:5px;
+  }
+  .assist-btn svg{ width:10px;height:10px; }
+  .assist-btn:active{ background: var(--gold-soft); }
+
+  .assist-response{
+    display:none;
+    background: var(--paper-soft);
+    border-left:3px solid var(--gold);
+    border-radius:6px;
+    padding:12px 14px;
+    margin: 4px 0 16px;
+  }
+  .assist-response.open{ display:block; }
+  .assist-label{
+    font-family:'Inter'; font-size:9.5px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.06em; color: var(--moss); margin-bottom:6px;
+  }
+  .assist-text{
+    font-family:'Literata', serif; font-size:13.5px; line-height:1.6; color: var(--text-dark);
+    white-space:pre-line;
+  }
+  .assist-close{
+    margin-top:10px;
+    font-family:'Inter'; font-size:10.5px; font-weight:700;
+    background:none; border:none; color:var(--text-mute); cursor:pointer; padding:0;
+  }
+  .assist-loading{
+    display:flex; align-items:center; gap:8px;
+    font-family:'Inter'; font-size:12px; color:var(--text-mute);
+  }
+  .spin{
+    width:13px;height:13px; border-radius:50%;
+    border:2px solid var(--line);
+    border-top-color: var(--gold);
+    animation: spin .7s linear infinite;
+    flex-shrink:0;
+  }
+  @keyframes spin{ to{ transform: rotate(360deg); } }
+
+  /* Smart Reader banner */
+  .smart-banner{
+    display:flex; align-items:center; gap:8px;
+    background: rgba(75,107,74,0.12);
+    border:1px solid rgba(75,107,74,0.25);
+    color: var(--moss);
+    font-family:'Inter'; font-size:11px; font-weight:600;
+    padding:8px 12px; border-radius:10px;
+    margin-bottom:16px;
+  }
+
+  /* Floating definition card */
+  .def-card{
+    position:absolute;
+    width:260px;
+    background: var(--ink);
+    color: var(--paper);
+    border-radius:14px;
+    box-shadow: 0 20px 40px -12px rgba(0,0,0,0.5);
+    padding:16px 16px 14px;
+    z-index:200;
+    opacity:0;
+    transform: translateY(6px) scale(.97);
+    pointer-events:none;
+    transition: opacity .16s ease, transform .16s ease;
+  }
+  .def-card.show{
+    opacity:1;
+    transform: translateY(0) scale(1);
+    pointer-events:auto;
+  }
+  .def-card::before{
+    content:'';
+    position:absolute;
+    bottom:-7px; left:26px;
+    width:14px;height:14px;
+    background:var(--ink);
+    transform: rotate(45deg);
+    border-radius:2px;
+  }
+  .def-card.arrow-top::before{
+    bottom:auto; top:-7px;
+  }
+  .def-head{
+    display:flex; align-items:baseline; justify-content:space-between; gap:8px;
+  }
+  .def-word{
+    font-family:'Fraunces', serif; font-weight:600; font-size:17px;
+    text-transform:lowercase;
+  }
+  .def-pos{
+    font-family:'Inter'; font-size:10px; font-style:italic;
+    color: var(--gold-soft);
+    margin-top:2px;
+  }
+  .def-sound{
+    width:26px;height:26px;border-radius:50%;
+    background: rgba(239,230,208,0.12);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer; flex-shrink:0;
+  }
+  .def-meaning{
+    font-family:'Literata', serif;
+    font-size:13px;
+    line-height:1.5;
+    margin-top:8px;
+    color: rgba(239,230,208,0.92);
+  }
+  .def-actions{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-top:12px;
+  }
+  .def-more-btn{
+    font-family:'Inter'; font-size:11px; font-weight:700;
+    color: var(--gold-soft);
+    background:none;border:none;cursor:pointer;
+    padding:0;
+    display:flex; align-items:center; gap:4px;
+  }
+  .def-save-btn{
+    font-family:'Inter'; font-size:11px; font-weight:700;
+    color: var(--ink);
+    background: var(--gold-soft);
+    border:none; border-radius:999px;
+    padding:6px 12px;
+    cursor:pointer;
+    display:flex; align-items:center; gap:5px;
+  }
+  .def-save-btn.saved{ background: var(--moss); color:#fff; }
+
+  .def-extra{
+    max-height:0;
+    overflow:hidden;
+    transition: max-height .22s ease;
+  }
+  .def-extra.open{ max-height:220px; margin-top:10px; }
+  .def-extra-inner{ border-top:1px solid rgba(239,230,208,0.15); padding-top:10px; }
+  .def-row{ margin-bottom:8px; }
+  .def-row .lbl{
+    font-family:'Inter'; font-size:9.5px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.06em; color: rgba(239,230,208,0.5); margin-bottom:3px;
+  }
+  .def-row .val{
+    font-family:'Literata', serif; font-size:12.5px; color: rgba(239,230,208,0.92); line-height:1.45;
+  }
+  .chip-row{ display:flex; flex-wrap:wrap; gap:5px; }
+  .mini-chip{
+    font-family:'Inter'; font-size:10.5px;
+    background: rgba(239,230,208,0.1);
+    padding:3px 8px; border-radius:999px;
+  }
+
+  .backdrop{
+    position:absolute; inset:0;
+    z-index:150;
+    background: transparent;
+    display:none;
+  }
+  .backdrop.show{ display:block; }
+
+  /* Reading settings sheet */
+  .sheet{
+    position:absolute; left:0; right:0; bottom:0;
+    background: var(--paper-soft);
+    border-radius:20px 20px 0 0;
+    box-shadow: 0 -10px 30px rgba(0,0,0,0.2);
+    padding:18px 22px 26px;
+    transform: translateY(100%);
+    transition: transform .25s ease;
+    z-index:300;
+  }
+  .sheet.open{ transform: translateY(0); }
+  .sheet-handle{
+    width:36px;height:4px;background:var(--line);border-radius:2px;margin:0 auto 14px;
+  }
+  .sheet-row{ display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--line); }
+  .sheet-row:last-child{ border-bottom:none; }
+  .sheet-label{ font-family:'Inter'; font-size:13px; font-weight:600; color:var(--text-dark); }
+  .stepper{ display:flex; align-items:center; gap:10px; }
+  .stepper button{
+    width:26px;height:26px;border-radius:50%;border:1px solid var(--line);
+    background:#fff; font-size:14px; cursor:pointer; color:var(--text-dark);
+  }
+  .theme-dot-row{ display:flex; gap:8px; }
+  .theme-dot{ width:26px;height:26px;border-radius:50%; cursor:pointer; border:2px solid transparent; }
+  .theme-dot.active{ border-color:var(--gold); }
+
+  /* ================= VOCAB ================= */
+  .vocab-scroll{ flex:1; overflow-y:auto; padding:4px 22px 24px; }
+  .vocab-stats{
+    display:flex; gap:10px; margin: 4px 0 16px;
+  }
+  .stat-box{
+    flex:1; background:var(--paper-soft); border:1px solid var(--line);
+    border-radius:12px; padding:12px; text-align:center;
+  }
+  .stat-num{ font-family:'Fraunces',serif; font-weight:700; font-size:20px; color:var(--moss); }
+  .stat-lbl{ font-family:'Inter'; font-size:9.5px; color:var(--text-mute); text-transform:uppercase; letter-spacing:.04em; margin-top:2px;}
+
+  .vocab-card{
+    background:#fff; border:1px solid var(--line); border-radius:12px;
+    padding:12px 14px; margin-bottom:10px;
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+  }
+  .vocab-word{ font-family:'Fraunces',serif; font-weight:600; font-size:15px; color:var(--text-dark); }
+  .vocab-def{ font-family:'Inter'; font-size:11px; color:var(--text-mute); margin-top:2px; }
+  .vocab-src{ font-family:'Inter'; font-size:9.5px; color:var(--gold); margin-top:4px; text-transform:uppercase; letter-spacing:.03em; }
+  .quiz-btn{
+    width:32px;height:32px;border-radius:50%; background:var(--paper-soft); border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center; flex-shrink:0; cursor:pointer;
+  }
+  .empty-vocab{
+    text-align:center; padding: 60px 20px 20px;
+    color:var(--text-mute); font-family:'Inter'; font-size:12.5px; line-height:1.6;
+  }
+  .empty-vocab svg{ width:40px;height:40px; margin-bottom:12px; opacity:.5; }
+
+  /* ---------- Collections ---------- */
+  .collection-card{
+    flex-shrink:0; width:118px; height:74px; border-radius:12px;
+    padding:10px 12px; display:flex; flex-direction:column; justify-content:space-between;
+    cursor:pointer; color:#fff; position:relative; overflow:hidden;
+  }
+  .collection-card .name{ font-family:'Fraunces',serif; font-weight:600; font-size:13px; position:relative; z-index:2; }
+  .collection-card .count{ font-family:'Inter'; font-size:10px; opacity:.85; position:relative; z-index:2; }
+  .collection-card::after{ content:''; position:absolute; inset:0; background:linear-gradient(160deg, rgba(255,255,255,0.06), rgba(0,0,0,0.25)); }
+  .collection-new{
+    flex-shrink:0; width:118px; height:74px; border-radius:12px;
+    border:1.5px dashed rgba(36,31,23,0.28);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+    font-family:'Inter'; font-size:10.5px; font-weight:700; color:var(--text-mute);
+    cursor:pointer;
+  }
+
+  /* ---------- Search sheet ---------- */
+  .search-input-wrap{
+    display:flex; align-items:center; gap:8px;
+    background:#fff; border:1px solid var(--line); border-radius:12px;
+    padding:10px 14px; margin-bottom:14px;
+  }
+  .search-input-wrap input{
+    border:none; outline:none; flex:1;
+    font-family:'Inter'; font-size:13.5px; color:var(--text-dark); background:transparent;
+  }
+  #searchSheet, #upgradeSheet{ max-height:78%; overflow-y:auto; }
+  .search-empty{ text-align:center; color:var(--text-mute); font-family:'Inter'; font-size:12px; padding:24px 10px; }
+
+  /* ---------- Premium / paywall ---------- */
+  .plan-pill{
+    font-family:'Inter'; font-size:10px; font-weight:700; letter-spacing:.03em;
+    padding:5px 11px; border-radius:999px; cursor:pointer;
+    background: var(--paper-soft); border:1px solid var(--line); color:var(--text-mute);
+  }
+  body.premium .plan-pill{ background: linear-gradient(120deg, var(--gold), var(--gold-soft)); color:#fff; border:none; }
+  .lock-badge{ display:inline-flex; align-items:center; }
+  body.premium .lock-badge{ display:none; }
+  .lock-badge svg{ width:9px; height:9px; }
+
+  .upgrade-hero{
+    text-align:center; padding: 4px 6px 18px;
+  }
+  .upgrade-hero .crown{
+    width:44px; height:44px; margin:0 auto 10px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+    border-radius:14px; display:flex; align-items:center; justify-content:center;
+  }
+  .upgrade-hero h3{
+    font-family:'Fraunces', serif; font-size:19px; margin:0 0 4px; color:var(--text-dark);
+  }
+  .upgrade-hero p{
+    font-family:'Inter'; font-size:12px; color:var(--text-mute); margin:0; line-height:1.5;
+  }
+  .upgrade-feature{
+    display:flex; align-items:flex-start; gap:10px; padding:9px 0; border-bottom:1px solid var(--line);
+  }
+  .upgrade-feature:last-of-type{ border-bottom:none; }
+  .upgrade-feature .check{
+    width:18px;height:18px;border-radius:50%; background:rgba(75,107,74,0.15); color:var(--moss);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px;
+  }
+  .upgrade-feature .check svg{ width:10px;height:10px; }
+  .upgrade-feature .txt strong{ font-family:'Inter'; font-size:12.5px; color:var(--text-dark); display:block; }
+  .upgrade-feature .txt span{ font-family:'Inter'; font-size:11px; color:var(--text-mute); }
+  .upgrade-cta{
+    width:100%; margin-top:16px;
+    background: var(--ink); color:var(--paper); border:none; border-radius:14px;
+    font-family:'Inter'; font-weight:700; font-size:13.5px; padding:13px; cursor:pointer;
+  }
+  .upgrade-price{ text-align:center; font-family:'Inter'; font-size:10.5px; color:var(--text-mute); margin-top:8px; }
+
+  .plan-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:8px; margin: 16px 0 4px;
+  }
+  .plan-card{
+    position:relative;
+    border:1.5px solid var(--line); border-radius:12px;
+    padding:10px 10px 9px;
+    cursor:pointer;
+    background:#fff;
+  }
+  .plan-card.active{ border-color: var(--gold); background: rgba(184,135,59,0.08); }
+  .plan-card .badge{
+    position:absolute; top:-8px; right:8px;
+    background: var(--moss); color:#fff;
+    font-family:'Inter'; font-size:8.5px; font-weight:700; letter-spacing:.03em;
+    padding:2px 7px; border-radius:999px; text-transform:uppercase;
+  }
+  .plan-card .p-label{ font-family:'Inter'; font-size:11px; font-weight:700; color:var(--text-dark); }
+  .plan-card .p-price{ font-family:'Fraunces',serif; font-size:17px; font-weight:700; color:var(--text-dark); margin-top:2px; }
+  .plan-card .p-sub{ font-family:'Inter'; font-size:9.5px; color:var(--text-mute); margin-top:2px; }
+
+  /* ---------- Profile screen ---------- */
+  .profile-scroll{ flex:1; overflow-y:auto; padding: 4px 22px 24px; }
+  .profile-header{
+    display:flex; align-items:center; gap:14px; padding: 10px 0 18px;
+  }
+  .avatar{
+    width:56px;height:56px;border-radius:50%;
+    background: linear-gradient(135deg, var(--gold), var(--moss));
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Fraunces',serif; font-weight:700; font-size:20px; color:#fff; flex-shrink:0;
+  }
+  .profile-name{ font-family:'Fraunces',serif; font-weight:600; font-size:17px; color:var(--text-dark); }
+  .profile-email{ font-family:'Inter'; font-size:11.5px; color:var(--text-mute); margin-top:2px; }
+
+  .plan-summary{
+    background: var(--ink); border-radius:14px; padding:16px 18px; margin-bottom:18px;
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+  }
+  .plan-summary.is-plus{ background: linear-gradient(120deg, #16241D, #2c4433); }
+  .plan-summary .ps-label{ font-family:'Inter'; font-size:9.5px; text-transform:uppercase; letter-spacing:.06em; color:rgba(239,230,208,0.55); }
+  .plan-summary .ps-name{ font-family:'Fraunces',serif; font-weight:600; font-size:16px; color:var(--paper); margin-top:2px; }
+  .plan-summary .ps-detail{ font-family:'Inter'; font-size:10.5px; color:rgba(239,230,208,0.6); margin-top:2px; }
+  .plan-summary button{
+    background: var(--gold-soft); color:var(--ink); border:none; border-radius:999px;
+    font-family:'Inter'; font-weight:700; font-size:11px; padding:8px 14px; cursor:pointer; flex-shrink:0;
+  }
+
+  .profile-section-title{
+    font-family:'Inter'; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+    color: var(--text-mute); margin: 18px 0 8px;
+  }
+  .profile-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:12px 0; border-bottom:1px solid var(--line);
+  }
+  .profile-row:last-child{ border-bottom:none; }
+  .pr-left{ display:flex; align-items:center; gap:11px; }
+  .pr-icon{
+    width:32px;height:32px;border-radius:9px; background:var(--paper-soft); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; color:var(--text-dark);
+  }
+  .pr-label{ font-family:'Inter'; font-size:13px; font-weight:600; color:var(--text-dark); }
+  .pr-sub{ font-family:'Inter'; font-size:10.5px; color:var(--text-mute); margin-top:1px; }
+  .pr-action{ font-family:'Inter'; font-size:11px; font-weight:700; color:var(--moss); cursor:pointer; }
+  .pr-action.muted{ color:var(--text-mute); }
+
+  .device-dot{ width:6px;height:6px;border-radius:50%; background:var(--moss); display:inline-block; margin-right:5px; }
+
+  .switch-toggle{ position:relative; display:inline-block; width:38px; height:22px; flex-shrink:0; }
+  .switch-toggle input{ opacity:0; width:0; height:0; }
+  .switch-track{ position:absolute; inset:0; background:#c9c2b2; border-radius:20px; transition:.2s; cursor:pointer; }
+  .switch-track.on{ background: var(--moss); }
+  .switch-dot{ position:absolute; height:16px; width:16px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.2s; pointer-events:none; }
+  .switch-dot.on{ left:19px; }
+
+  .signout-btn{
+    width:100%; margin-top:22px; background:none; border:1.5px solid var(--line); border-radius:12px;
+    padding:12px; font-family:'Inter'; font-weight:700; font-size:12.5px; color:#a13b3b; cursor:pointer;
+  }
+
+  /* ---------- Onboarding ---------- */
+  .onboard-inner{
+    flex:1; display:flex; flex-direction:column; overflow-y:auto;
+  }
+  .onboard-step{
+    display:none;
+    flex:1;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding: 50px 30px 34px;
+    text-align:center;
+  }
+  .onboard-step.active{ display:flex; }
+  .onboard-step[data-step="3"]{ align-items:stretch; justify-content:flex-start; padding-top:60px; }
+
+  .onboard-mark{
+    width:76px; height:76px; border-radius:22px;
+    background: var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    margin-bottom:18px;
+    box-shadow: 0 14px 30px -10px rgba(22,36,29,0.55);
+  }
+  .onboard-wordmark{
+    font-family:'Fraunces',serif; font-weight:600; font-size:26px; color:var(--text-dark);
+  }
+  .onboard-wordmark .dot{ color: var(--gold); }
+  .onboard-tag{
+    font-family:'Inter'; font-size:13px; color:var(--text-mute); margin-top:8px; max-width:230px; line-height:1.5;
+  }
+
+  .onboard-illustration{
+    width:100%; max-width:220px; height:130px;
+    display:flex; align-items:center; justify-content:center;
+    margin-bottom:26px;
+  }
+  .onboard-title{
+    font-family:'Fraunces',serif; font-weight:600; font-size:20px; color:var(--text-dark); line-height:1.3; margin-bottom:10px;
+  }
+  .onboard-desc{
+    font-family:'Inter'; font-size:12.5px; color:var(--text-mute); line-height:1.6; max-width:250px;
+  }
+  .onboard-dots{ display:flex; gap:6px; margin: 22px 0 26px; }
+  .onboard-dot{ width:6px;height:6px;border-radius:50%; background: var(--line); }
+  .onboard-dot.filled{ background: var(--gold); width:16px; border-radius:4px; transition: all .2s ease; }
+
+  .onboard-btn-primary{
+    width:100%; max-width:270px;
+    background: var(--ink); color: var(--paper); border:none; border-radius:14px;
+    font-family:'Inter'; font-weight:700; font-size:13.5px; padding:14px; cursor:pointer;
+  }
+  .onboard-btn-text{
+    margin-top:14px; font-family:'Inter'; font-size:11.5px; font-weight:600; color: var(--text-mute); cursor:pointer;
+  }
+
+  .auth-input{
+    width:100%; font-family:'Inter'; font-size:13px; color:var(--text-dark);
+    background:#fff; border:1px solid var(--line); border-radius:10px;
+    padding:12px 14px; outline:none; box-sizing:border-box; margin-bottom:10px;
+  }
+  .auth-divider{
+    text-align:center; font-family:'Inter'; font-size:10.5px; color:var(--text-mute);
+    margin:16px 0 12px; position:relative;
+  }
+  .social-row{ display:flex; gap:10px; margin-bottom:6px; }
+  .social-btn{
+    flex:1; background:#fff; border:1px solid var(--line); border-radius:10px;
+    padding:11px; font-family:'Inter'; font-weight:700; font-size:12.5px; color:var(--text-dark); cursor:pointer;
+  }
+  .pref-chips{
+    display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin: 6px 0 26px; max-width:280px;
+  }
+  .pref-chip{
+    padding:9px 15px; border-radius:999px; border:1.5px solid var(--line); background:#fff;
+    font-family:'Inter'; font-size:12px; font-weight:600; color:var(--text-dark); cursor:pointer;
+  }
+  .pref-chip.active{ background: var(--moss); border-color: var(--moss); color:#fff; }
+
+  /* ---------- Sheet dim backdrops ---------- */
+  .dim-backdrop{
+    position:absolute; inset:0; z-index:290;
+    background: rgba(12,18,14,0.4);
+    opacity:0; pointer-events:none;
+    transition: opacity .2s ease;
+  }
+  .dim-backdrop.show{ opacity:1; pointer-events:auto; }
+  .sheet-close{
+    position:absolute; top:14px; right:16px;
+    width:26px;height:26px;border-radius:50%;
+    background: var(--paper-soft); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; color:var(--text-dark); z-index:2;
+  }
+
+  /* ---------- Flashcard practice overlay ---------- */
+  .practice-overlay{
+    position:absolute; inset:0; background: var(--ink); z-index:500;
+    display:none; flex-direction:column;
+  }
+  .practice-overlay.open{ display:flex; }
+  .practice-top{
+    padding:44px 20px 10px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0;
+  }
+  .practice-progress{
+    font-family:'Inter'; font-size:11px; font-weight:600; color: rgba(239,230,208,0.6);
+  }
+  .practice-body{
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px 26px;
+  }
+  .flashcard{
+    width:100%; max-width:280px; min-height:220px; border-radius:20px;
+    background: var(--paper-soft);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:28px 22px; text-align:center; cursor:pointer;
+  }
+  .flashcard .fc-word{ font-family:'Fraunces',serif; font-weight:700; font-size:26px; color:var(--text-dark); }
+  .flashcard .fc-pos{ font-family:'Inter'; font-size:11px; font-style:italic; color:var(--text-mute); margin-top:4px; }
+  .flashcard .fc-hint{ font-family:'Inter'; font-size:10.5px; color: var(--gold); margin-top:16px; font-weight:600; }
+  .flashcard .fc-def{ font-family:'Literata',serif; font-size:14px; color:var(--text-dark); line-height:1.55; margin-top:10px; }
+  .practice-actions{ display:flex; gap:10px; width:100%; max-width:280px; margin-top:20px; }
+  .practice-actions button{
+    flex:1; padding:13px 6px; border-radius:14px; border:none; cursor:pointer;
+    font-family:'Inter'; font-weight:700; font-size:12.5px;
+  }
+  .btn-again{ background: rgba(239,230,208,0.12); color: var(--paper); }
+  .btn-knew{ background: var(--moss); color:#fff; }
+  .practice-done{ text-align:center; color:var(--paper); }
+  .practice-done h3{ font-family:'Fraunces',serif; font-size:20px; margin:10px 0 4px; }
+  .practice-done p{ font-family:'Inter'; font-size:12px; color:rgba(239,230,208,0.65); margin:0 0 20px; }
+  .practice-close-btn{
+    background: var(--gold-soft); color:var(--ink); border:none; border-radius:999px;
+    font-family:'Inter'; font-weight:700; font-size:12.5px; padding:10px 22px; cursor:pointer;
+  }
+
+  /* ---------- Import / Paste / Web sheets ---------- */
+  .source-option{
+    display:flex; align-items:center; gap:12px;
+    padding:12px 4px; border-bottom:1px solid var(--line);
+    cursor:pointer;
+  }
+  .source-option:last-child{ border-bottom:none; }
+  .source-icon{
+    width:36px;height:36px;border-radius:10px;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .source-txt strong{ font-family:'Inter'; font-size:13px; color:var(--text-dark); display:block; }
+  .source-txt span{ font-family:'Inter'; font-size:11px; color:var(--text-mute); }
+  .plain-input{
+    width:100%; font-family:'Inter'; font-size:13px; color:var(--text-dark);
+    background:#fff; border:1px solid var(--line); border-radius:10px;
+    padding:11px 13px; outline:none; box-sizing:border-box;
+  }
+  .plain-textarea{
+    width:100%; min-height:140px; font-family:'Literata',serif; font-size:13.5px; line-height:1.55; color:var(--text-dark);
+    background:#fff; border:1px solid var(--line); border-radius:10px;
+    padding:12px 13px; outline:none; box-sizing:border-box; resize:vertical;
+  }
+
+  /* ---------- Highlights & Notes ---------- */
+  .passage-actions-row{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  .highlight-trigger{
+    display:inline-flex; align-items:center; gap:5px;
+    font-family:'Inter'; font-size:10.5px; font-weight:700;
+    color: var(--plum); cursor:pointer; padding:2px 0 14px;
+  }
+  .highlight-trigger svg{ width:11px;height:11px; }
+
+  .highlight-popover{
+    max-height:0; overflow:hidden; transition:max-height .2s ease;
+  }
+  .highlight-popover.open{ max-height:160px; margin-bottom:12px; }
+  .hl-color-row{ display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+  .hl-dot{
+    width:22px;height:22px;border-radius:50%; cursor:pointer; border:2px solid transparent;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .hl-dot.active{ border-color: var(--text-dark); }
+  .hl-note-btn{
+    font-family:'Inter'; font-size:10.5px; font-weight:700; color:var(--text-mute);
+    background:var(--paper-soft); border:1px solid var(--line); border-radius:999px;
+    padding:5px 11px; cursor:pointer; display:flex; align-items:center; gap:4px;
+  }
+  .hl-note-area{
+    display:none; margin-top:8px;
+  }
+  .hl-note-area.open{ display:block; }
+  .hl-note-area textarea{
+    width:100%; min-height:56px; font-family:'Inter'; font-size:12px; color:var(--text-dark);
+    background:#fff; border:1px solid var(--line); border-radius:8px; padding:8px 10px; outline:none;
+    box-sizing:border-box; resize:vertical;
+  }
+  .hl-note-save{
+    margin-top:6px; font-family:'Inter'; font-weight:700; font-size:10.5px;
+    background:var(--moss); color:#fff; border:none; border-radius:999px; padding:5px 12px; cursor:pointer;
+  }
+  .hl-remove{
+    font-family:'Inter'; font-weight:700; font-size:10.5px; color:var(--text-mute);
+    background:none; border:none; cursor:pointer; padding:0; margin-left:auto;
+  }
+
+  /* Applied highlight colors on paragraph text */
+  .passage p.hl-yellow{ background: linear-gradient(180deg, transparent 60%, rgba(216,182,121,0.55) 60%); }
+  .passage p.hl-green{ background: linear-gradient(180deg, transparent 60%, rgba(75,107,74,0.28) 60%); }
+  .passage p.hl-pink{ background: linear-gradient(180deg, transparent 60%, rgba(110,59,78,0.22) 60%); }
+  .passage p.has-note{ position:relative; }
+  .note-pill{
+    display:inline-flex; align-items:center; gap:5px;
+    background: var(--paper-soft); border:1px solid var(--line);
+    border-radius:8px; padding:6px 10px; margin-top:2px; margin-bottom:14px;
+    font-family:'Inter'; font-size:11px; color:var(--text-dark); font-style:italic;
+  }
+  .note-pill svg{ width:11px;height:11px; flex-shrink:0; color:var(--gold); }
+
+  .bookmark-btn.active{ color: var(--gold); border-color: var(--gold); }
+  .bookmark-btn svg.filled{ display:none; }
+  .bookmark-btn.active svg.outline{ display:none; }
+  .bookmark-btn.active svg.filled{ display:block; }
+
+  /* Highlights sheet */
+  #highlightsSheet{ max-height:78%; overflow-y:auto; }
+  .hl-list-item{
+    display:flex; gap:10px; padding:11px 0; border-bottom:1px solid var(--line); align-items:flex-start;
+  }
+  .hl-swatch{ width:8px; border-radius:4px; align-self:stretch; flex-shrink:0; }
+  .hl-list-text{ flex:1; }
+  .hl-list-snippet{ font-family:'Literata',serif; font-size:12.5px; color:var(--text-dark); line-height:1.5; }
+  .hl-list-note{ font-family:'Inter'; font-size:11px; color:var(--text-mute); font-style:italic; margin-top:4px; }
+  .hl-goto{
+    font-family:'Inter'; font-size:10px; font-weight:700; color:var(--moss); cursor:pointer; margin-top:5px; display:inline-block;
+  }
+
+  .toast{
+    position:absolute; bottom:96px; left:50%; transform:translateX(-50%) translateY(10px);
+    background:var(--ink); color:var(--paper);
+    font-family:'Inter'; font-size:12px; font-weight:600;
+    padding:10px 18px; border-radius:999px;
+    box-shadow:0 10px 20px rgba(0,0,0,0.3);
+    opacity:0; pointer-events:none;
+    transition: all .25s ease;
+    z-index:400;
+    white-space:nowrap;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  .caption-below{
+    color: rgba(239,230,208,0.6);
+    font-family:'Inter';
+    font-size:12px;
+    max-width:380px;
+    text-align:center;
+    line-height:1.6;
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="stage-label">EasyWord — prototype walkthrough</div>
+
+  <div class="phone">
+    <div class="notch"></div>
+
+    <!-- ============ ONBOARDING ============ -->
+    <div class="screen" id="screen-onboarding">
+      <div class="onboard-inner">
+
+        <!-- Step 0: Splash -->
+        <div class="onboard-step active" data-step="0">
+          <div class="onboard-mark">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+              <path d="M20 8C15 10 10 10 6 9v18c4-1 9-1 14 1V8z" fill="#D8B679"/>
+              <path d="M20 8c5 2 10 2 14 1v18c-4-1-9-1-14 1V8z" fill="#B8873B"/>
+              <path d="M20 12c5 2 10 2 14 1" stroke="#16241D" stroke-width="0.6" opacity="0.3"/>
+              <path d="M28 5l1 3 3 1-3 1-1 3-1-3-3-1 3-1z" fill="#EFE6D0"/>
+            </svg>
+          </div>
+          <div class="onboard-wordmark">Easy<span class="dot">Word</span></div>
+          <div class="onboard-tag">Your personal reading &amp; learning companion — books, articles, and documents, all in one place.</div>
+          <button class="onboard-btn-primary" style="margin-top:26px;" onclick="nextOnboard()">Get started</button>
+          <div class="onboard-btn-text" onclick="skipToAuth('login')">I already have an account</div>
+        </div>
+
+        <!-- Step 1: Feature - Dictionary -->
+        <div class="onboard-step" data-step="1">
+          <div class="onboard-illustration">
+            <svg width="180" height="120" viewBox="0 0 180 120" fill="none">
+              <rect x="10" y="30" width="160" height="14" rx="3" fill="#E8DFC8"/>
+              <rect x="10" y="52" width="120" height="14" rx="3" fill="#E8DFC8"/>
+              <rect x="10" y="74" width="140" height="14" rx="3" fill="#E8DFC8"/>
+              <rect x="55" y="52" width="42" height="14" rx="3" fill="#D8B679"/>
+              <rect x="42" y="4" width="96" height="34" rx="10" fill="#16241D"/>
+              <path d="M50 38l6-8h8l-6 8z" fill="#16241D"/>
+              <text x="90" y="26" font-family="Fraunces, serif" font-size="12" fill="#EFE6D0" text-anchor="middle" font-weight="600">definition ↝</text>
+            </svg>
+          </div>
+          <div class="onboard-title">Tap any word, instantly<br>understand it</div>
+          <div class="onboard-desc">Definitions, pronunciation, and examples appear right where you're reading — you never leave the page.</div>
+          <div class="onboard-dots">
+            <div class="onboard-dot filled" data-dot="1"></div>
+            <div class="onboard-dot" data-dot="2"></div>
+          </div>
+          <button class="onboard-btn-primary" onclick="nextOnboard()">Next</button>
+        </div>
+
+        <!-- Step 2: Feature - Library + AI -->
+        <div class="onboard-step" data-step="2">
+          <div class="onboard-illustration">
+            <svg width="180" height="120" viewBox="0 0 180 120" fill="none">
+              <rect x="20" y="20" width="34" height="80" rx="4" fill="#6E3B4E"/>
+              <rect x="58" y="14" width="34" height="86" rx="4" fill="#4B6B4A"/>
+              <rect x="96" y="26" width="34" height="74" rx="4" fill="#2E4C6D"/>
+              <rect x="134" y="18" width="26" height="82" rx="4" fill="#B8873B"/>
+              <path d="M140 2l2.4 6.4L149 11l-6.6 2.6L140 20l-2.4-6.4L131 11l6.6-2.6z" fill="#EFE6D0"/>
+            </svg>
+          </div>
+          <div class="onboard-title">One place for<br>everything you read</div>
+          <div class="onboard-desc">Books, PDFs, articles, and pasted text — plus an AI companion to simplify anything you don't understand.</div>
+          <div class="onboard-dots">
+            <div class="onboard-dot" data-dot="1"></div>
+            <div class="onboard-dot filled" data-dot="2"></div>
+          </div>
+          <button class="onboard-btn-primary" onclick="nextOnboard()">Next</button>
+        </div>
+
+        <!-- Step 3: Auth -->
+        <div class="onboard-step" data-step="3">
+          <div class="onboard-title" id="authTitle" style="text-align:left;">Create your account</div>
+          <div class="onboard-desc" id="authSub" style="text-align:left; max-width:none; margin-bottom:20px;">Free to start — upgrade any time.</div>
+          <input class="auth-input" type="text" placeholder="Full name" id="authName">
+          <input class="auth-input" type="email" placeholder="Email address" id="authEmail">
+          <input class="auth-input" type="password" placeholder="Password" id="authPassword">
+          <button class="onboard-btn-primary" style="max-width:none; margin-top:4px;" onclick="completeAuth()" id="authSubmitBtn">Create account</button>
+          <div class="auth-divider">or continue with</div>
+          <div class="social-row">
+            <button class="social-btn" onclick="showToast('Continue with Google')">Google</button>
+            <button class="social-btn" onclick="showToast('Continue with Apple')">Apple</button>
+          </div>
+          <div class="onboard-btn-text" style="text-align:center;" onclick="toggleAuthMode()" id="authToggleText">Already have an account? Log in</div>
+        </div>
+
+        <!-- Step 4: Preferences -->
+        <div class="onboard-step" data-step="4">
+          <div class="onboard-title">What do you like to read?</div>
+          <div class="onboard-desc">We'll use this to tailor your library — change it any time.</div>
+          <div class="pref-chips" id="prefChips"></div>
+          <button class="onboard-btn-primary" onclick="finishOnboarding()">Start reading</button>
+          <div class="onboard-btn-text" onclick="finishOnboarding()">Skip for now</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ============ LIBRARY SCREEN ============ -->
+    <div class="screen" id="screen-library">
+      <div class="app-topbar">
+        <div class="wordmark">Easy<span class="dot">Word</span></div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <div class="plan-pill" id="planPill" onclick="handlePlanPillClick()">Free plan</div>
+          <div class="icon-btn" onclick="openSearch()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="library-scroll">
+        <div class="tag-row" id="tagRow"></div>
+
+        <div class="import-row">
+          <div class="import-chip" onclick="openImportSheet()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 20h16"/></svg>
+            Import file
+          </div>
+          <div class="import-chip" onclick="openPasteSheet()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 4V2h6v2"/></svg>
+            Paste &amp; Read
+          </div>
+          <div class="import-chip" onclick="openWebSheet()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18 14 14 0 010-18"/></svg>
+            Save from web
+          </div>
+        </div>
+
+        <div class="section-title">Continue reading <span class="see-all" onclick="showToast('Showing everything you\'re currently reading')">See all</span></div>
+        <div class="shelf" id="continueShelf"></div>
+
+        <div class="section-title">Collections</div>
+        <div class="shelf" id="collectionsShelf"></div>
+
+        <div class="section-title">Your library
+          <span style="display:flex; gap:12px; align-items:center;">
+            <span class="see-all" id="favToggle" onclick="toggleFavoritesFilter()">★ Favorites</span>
+            <span class="see-all" id="clearFilter" style="display:none; cursor:pointer;" onclick="clearCollectionFilter()">Clear filter ✕</span>
+          </span>
+        </div>
+        <div id="libraryList"></div>
+      </div>
+
+      <div class="tabbar">
+        <div class="tab active" data-tab="library" onclick="switchTab('library')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+          Library
+        </div>
+        <div class="tab" data-tab="reader" onclick="switchTab('reader')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+          Reading
+        </div>
+        <div class="tab" data-tab="vocab" onclick="switchTab('vocab')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V6a2 2 0 012-2h13v15H6a2 2 0 00-2 2z"/><path d="M4 19a2 2 0 002 2h13"/></svg>
+          Words
+        </div>
+        <div class="tab" data-tab="profile" onclick="switchTab('profile')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+          Profile
+        </div>
+      </div>
+
+      <!-- Search sheet -->
+      <div class="dim-backdrop" id="libDim" onclick="closeAllLibSheets()"></div>
+      <div class="sheet" id="searchSheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-close" onclick="closeAllLibSheets()">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </div>
+        <div class="search-input-wrap">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-mute)" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="searchInput" placeholder="Search titles, authors, keywords..." oninput="runSearch(this.value)">
+        </div>
+        <div id="searchResults"></div>
+      </div>
+
+      <!-- Upgrade / paywall sheet -->
+      <div class="sheet" id="upgradeSheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-close" onclick="closeAllLibSheets()">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </div>
+        <div class="upgrade-hero">
+          <div class="crown">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 18h18M4 18l1-9 4 4 3-6 3 6 4-4 1 9"/></svg>
+          </div>
+          <h3>EasyWord Plus</h3>
+          <p>Unlock the full reading &amp; learning companion.</p>
+        </div>
+        <div class="upgrade-feature">
+          <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <div class="txt"><strong>Unlimited AI reading assistant</strong><span>Free plan includes 10 Simplify/Summarize uses — Plus removes the cap and unlocks Explain &amp; Translate</span></div>
+        </div>
+        <div class="upgrade-feature">
+          <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <div class="txt"><strong>Unlimited vocabulary</strong><span>Free plan saves up to 30 words — Plus removes the limit</span></div>
+        </div>
+        <div class="upgrade-feature">
+          <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <div class="txt"><strong>Offline downloads</strong><span>Read your whole library without a connection</span></div>
+        </div>
+        <div class="upgrade-feature">
+          <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <div class="txt"><strong>Cross-device sync</strong><span>Library, notes & progress everywhere</span></div>
+        </div>
+        <div class="plan-grid" id="planGrid"></div>
+        <button class="upgrade-cta" onclick="upgradeNow()" id="upgradeCta">Upgrade — R29/month</button>
+        <div class="upgrade-price">Cancel anytime · this is a demo, no payment taken</div>
+      </div>
+
+      <!-- Import file sheet -->
+      <div class="sheet" id="importSheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-close" onclick="closeAllLibSheets()">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </div>
+        <div class="sheet-label" style="font-family:'Fraunces',serif; font-size:16px; margin-bottom:14px;">Import a file</div>
+        <input type="file" id="fileInput" style="display:none" accept=".txt,.pdf,.doc,.docx,.epub" onchange="handleFileImport(event)">
+        <div class="source-option" onclick="document.getElementById('fileInput').click()">
+          <div class="source-icon" style="background:var(--moss);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 16l4-4 4 4 6-6"/></svg>
+          </div>
+          <div class="source-txt"><strong>From this device</strong><span>PDF, EPUB, DOC/DOCX, or TXT</span></div>
+        </div>
+        <div class="source-option" onclick="showToast('Connect Google Drive to import from there')">
+          <div class="source-icon" style="background:#2E4C6D;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 2L2 20h20z"/></svg>
+          </div>
+          <div class="source-txt"><strong>Google Drive</strong><span>Connect your account</span></div>
+        </div>
+        <div class="source-option" onclick="showToast('Connect Dropbox to import from there')">
+          <div class="source-icon" style="background:var(--gold);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M6 3l6 4-6 4-6-4z" transform="translate(6,0)"/></svg>
+          </div>
+          <div class="source-txt"><strong>Dropbox</strong><span>Connect your account</span></div>
+        </div>
+        <div class="source-option" onclick="showToast('Import from another app via share sheet')">
+          <div class="source-icon" style="background:var(--plum);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
+          </div>
+          <div class="source-txt"><strong>From another app</strong><span>Use your device's share menu</span></div>
+        </div>
+      </div>
+
+      <!-- Paste & Read sheet -->
+      <div class="sheet" id="pasteSheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-close" onclick="closeAllLibSheets()">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </div>
+        <div class="sheet-label" style="font-family:'Fraunces',serif; font-size:16px; margin-bottom:12px;">Paste &amp; Read</div>
+        <input type="text" id="pasteTitle" placeholder="Give it a title (optional)" class="plain-input" style="margin-bottom:10px;">
+        <textarea id="pasteArea" placeholder="Paste or type any text — an article, notes, an email, a passage from a book..." class="plain-textarea"></textarea>
+        <button class="upgrade-cta" style="margin-top:12px;" onclick="readPastedText()">Read now</button>
+      </div>
+
+      <!-- Save from web sheet -->
+      <div class="sheet" id="webSheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-close" onclick="closeAllLibSheets()">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </div>
+        <div class="sheet-label" style="font-family:'Fraunces',serif; font-size:16px; margin-bottom:12px;">Save from the web</div>
+        <input type="url" id="webUrlInput" placeholder="Paste an article link..." class="plain-input">
+        <div style="font-family:'Inter'; font-size:11px; color:var(--text-mute); margin-top:8px; line-height:1.5;">
+          We'll strip out ads, menus, and clutter automatically with Smart Reader Mode.
+        </div>
+        <button class="upgrade-cta" style="margin-top:16px;" id="webSaveBtn" onclick="saveFromWeb()">Save &amp; read</button>
+      </div>
+    </div>
+
+    <!-- ============ READER SCREEN ============ -->
+    <div class="screen reader-screen" id="screen-reader">
+      <div class="reader-top">
+        <div class="icon-btn" onclick="switchTab('library')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"/></svg>
+        </div>
+        <div class="mid">Smart Reader Mode <span id="smartState" style="color:var(--moss)">ON</span></div>
+        <div class="reader-tools">
+          <div class="icon-btn bookmark-btn" id="bookmarkBtn" onclick="toggleBookmark()" title="Bookmark this article">
+            <svg class="outline" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12v18l-6-4-6 4z"/></svg>
+            <svg class="filled" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 3h12v18l-6-4-6 4z"/></svg>
+          </div>
+          <div class="icon-btn" onclick="openHighlightsSheet()" title="Your highlights & notes">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V6a2 2 0 012-2h13v15H6a2 2 0 00-2 2z"/><path d="M4 19a2 2 0 002 2h13"/></svg>
+          </div>
+          <div class="icon-btn" onclick="speakArticle()" title="Read aloud">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 010 7"/></svg>
+          </div>
+          <div class="icon-btn" onclick="openSheet()" title="Reading settings">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21v-7M4 10V3M12 21v-11M12 6V3M20 21v-5M20 12V3"/><path d="M1 14h6M9 8h6M17 16h6"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="reader-body" id="readerBody">
+        <div class="smart-banner" id="smartBanner">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+          <span id="smartBannerText">Ads, menus &amp; clutter removed from this article</span>
+        </div>
+        <div class="reader-title" id="readerTitleText">The Quiet Power of Reading Slowly</div>
+        <div class="reader-byline" id="readerBylineText">Saved from longform.example · 6 min read</div>
+        <div class="reader-text" id="readerText"></div>
+      </div>
+
+      <div class="tabbar">
+        <div class="tab" onclick="switchTab('library')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+          Library
+        </div>
+        <div class="tab active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+          Reading
+        </div>
+        <div class="tab" onclick="switchTab('vocab')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V6a2 2 0 012-2h13v15H6a2 2 0 00-2 2z"/><path d="M4 19a2 2 0 002 2h13"/></svg>
+          Words
+        </div>
+        <div class="tab" onclick="switchTab('profile')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+          Profile
+        </div>
+      </div>
+
+      <!-- Floating definition card -->
+      <div class="def-card" id="defCard">
+        <div class="def-head">
+          <div>
+            <div class="def-word" id="defWord">word</div>
+            <div class="def-pos" id="defPos">noun</div>
+          </div>
+          <div class="def-sound" onclick="speakWord()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#EFE6D0" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 010 7"/></svg>
+          </div>
+        </div>
+        <div class="def-meaning" id="defMeaning">definition text</div>
+        <div class="def-actions">
+          <button class="def-more-btn" id="moreBtn" onclick="toggleMore()">
+            See more
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" id="moreArrow"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <button class="def-save-btn" id="saveBtn" onclick="toggleSave()">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21l-7-4-7 4V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+            Save
+          </button>
+        </div>
+        <div class="def-extra" id="defExtra">
+          <div class="def-extra-inner">
+            <div class="def-row">
+              <div class="lbl">Example</div>
+              <div class="val" id="defExample">example sentence</div>
+            </div>
+            <div class="def-row">
+              <div class="lbl">Synonyms</div>
+              <div class="chip-row" id="defSynonyms"></div>
+            </div>
+            <div class="def-row">
+              <div class="lbl">Origin</div>
+              <div class="val" id="defOrigin">etymology</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="backdrop" id="backdrop" onclick="closeCard()"></div>
+      <div class="dim-backdrop" id="readerDim" onclick="closeAllReaderSheets()"></div>
+
+      <!-- Reading settings sheet -->
+      <div class="sheet" id="settingsSheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-close" onclick="closeAllReaderSheets()">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </div>
+        <div class="sheet-row">
+          <div class="sheet-label">Text size</div>
+          <div class="stepper">
+            <button onclick="changeFont(-1)">A-</button>
+            <span id="fontLabel" style="font-family:'Inter'; font-size:12px; color:var(--text-mute); width:20px; text-align:center;">16</span>
+            <button onclick="changeFont(1)">A+</button>
+          </div>
+        </div>
+        <div class="sheet-row">
+          <div class="sheet-label">Theme</div>
+          <div class="theme-dot-row">
+            <div class="theme-dot active" style="background:#EFE6D0; border-color:var(--gold);" onclick="setTheme(this,'#EFE6D0','#241F17')"></div>
+            <div class="theme-dot" style="background:#F5F0E4;" onclick="setTheme(this,'#F5F0E4','#241F17')"></div>
+            <div class="theme-dot" style="background:#16241D;" onclick="setTheme(this,'#16241D','#EFE6D0')"></div>
+            <div class="theme-dot" style="background:#000;" onclick="setTheme(this,'#000000','#D8D2C4')"></div>
+          </div>
+        </div>
+        <div class="sheet-row">
+          <div class="sheet-label">Smart Reader Mode</div>
+          <div class="stepper">
+            <label style="position:relative; display:inline-block; width:38px; height:22px;">
+              <input type="checkbox" checked id="smartToggle" onchange="toggleSmart()" style="opacity:0; width:0; height:0;">
+              <span id="toggleTrack" style="position:absolute; inset:0; background:var(--moss); border-radius:20px; transition:.2s;"></span>
+              <span id="toggleDot" style="position:absolute; height:16px; width:16px; left:19px; top:3px; background:#fff; border-radius:50%; transition:.2s;"></span>
+            </label>
+          </div>
+        </div>
+        <div class="sheet-row">
+          <div class="sheet-label">Offline download</div>
+          <div class="icon-btn" onclick="downloadOffline()" style="position:relative;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 20h16"/></svg>
+            <span class="lock-badge" style="position:absolute; top:-4px; right:-4px; background:var(--gold); color:#fff; border-radius:50%; width:14px; height:14px; padding:2px;"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a5 5 0 00-5 5v3H6a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2v-8a2 2 0 00-2-2h-1V7a5 5 0 00-5-5zm0 2a3 3 0 013 3v3H9V7a3 3 0 013-3z"/></svg></span>
+          </div>
+        </div>
+        <div class="sheet-row">
+          <div class="sheet-label">Share &amp; export</div>
+          <div class="icon-btn" onclick="openShareSheet()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
+          </div>
+        </div>
+        <div style="text-align:center; margin-top:14px;">
+          <button onclick="closeAllReaderSheets()" style="border:none; background:var(--ink); color:var(--paper); font-family:'Inter'; font-weight:600; font-size:12px; padding:9px 20px; border-radius:999px; cursor:pointer;">Done</button>
+        </div>
+      </div>
+
+      <!-- Highlights & Notes sheet -->
+      <div class="sheet" id="highlightsSheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-close" onclick="closeAllReaderSheets()">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </div>
+        <div class="sheet-label" style="font-family:'Fraunces',serif; font-size:16px; margin-bottom:10px;">Highlights &amp; notes</div>
+        <div id="highlightsList"></div>
+        <div style="text-align:center; margin-top:8px;">
+          <button onclick="closeAllReaderSheets()" style="border:none; background:var(--ink); color:var(--paper); font-family:'Inter'; font-weight:600; font-size:12px; padding:9px 20px; border-radius:999px; cursor:pointer;">Done</button>
+        </div>
+      </div>
+
+      <!-- Share & Export sheet -->
+      <div class="sheet" id="shareSheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-close" onclick="closeAllReaderSheets()">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </div>
+        <div class="sheet-label" style="font-family:'Fraunces',serif; font-size:16px; margin-bottom:14px;">Share &amp; export</div>
+        <div class="source-option" onclick="shareArticle()">
+          <div class="source-icon" style="background:var(--moss);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
+          </div>
+          <div class="source-txt"><strong>Share this article</strong><span>Send to another app or contact</span></div>
+        </div>
+        <div class="source-option" onclick="copyArticleText()">
+          <div class="source-icon" style="background:#2E4C6D;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/></svg>
+          </div>
+          <div class="source-txt"><strong>Copy full text</strong><span>Copies the article to your clipboard</span></div>
+        </div>
+        <div class="source-option" onclick="exportHighlights()">
+          <div class="source-icon" style="background:var(--gold);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 20h16"/></svg>
+          </div>
+          <div class="source-txt"><strong>Export highlights &amp; notes</strong><span>Downloads a .txt file of everything you've marked</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ VOCABULARY SCREEN ============ -->
+    <div class="screen" id="screen-vocab" style="display:none;">
+      <div class="app-topbar">
+        <div class="wordmark" style="font-size:20px;">Your Words</div>
+        <div style="display:flex; gap:8px;">
+          <div class="icon-btn" onclick="exportVocabulary()" title="Export word list">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 20h16"/></svg>
+          </div>
+          <div class="icon-btn" onclick="startPractice()" title="Practice with flashcards">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="vocab-scroll">
+        <div class="vocab-stats">
+          <div class="stat-box"><div class="stat-num" id="statSaved">0</div><div class="stat-lbl">Saved</div></div>
+          <div class="stat-box"><div class="stat-num">3</div><div class="stat-lbl">Day streak</div></div>
+          <div class="stat-box"><div class="stat-num">12</div><div class="stat-lbl">Learned</div></div>
+        </div>
+        <button onclick="startPractice()" style="width:100%; background:var(--moss); color:#fff; border:none; border-radius:12px; padding:12px; font-family:'Inter'; font-weight:700; font-size:12.5px; margin-bottom:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:7px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>
+          Practice with flashcards
+        </button>
+        <div class="section-title" style="margin-top:2px;">Saved words</div>
+        <div id="vocabList"></div>
+      </div>
+
+      <!-- Flashcard practice overlay -->
+      <div class="practice-overlay" id="practiceOverlay">
+        <div class="practice-top">
+          <div class="icon-btn" onclick="closePractice()" style="background:rgba(239,230,208,0.12); border-color:transparent; color:var(--paper);">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </div>
+          <div class="practice-progress" id="practiceProgress">1 of 1</div>
+          <div style="width:34px;"></div>
+        </div>
+        <div class="practice-body" id="practiceBody"></div>
+      </div>
+      <div class="tabbar">
+        <div class="tab" onclick="switchTab('library')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+          Library
+        </div>
+        <div class="tab" onclick="switchTab('reader')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+          Reading
+        </div>
+        <div class="tab active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V6a2 2 0 012-2h13v15H6a2 2 0 00-2 2z"/><path d="M4 19a2 2 0 002 2h13"/></svg>
+          Words
+        </div>
+        <div class="tab" onclick="switchTab('profile')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+          Profile
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ PROFILE SCREEN ============ -->
+    <div class="screen" id="screen-profile" style="display:none;">
+      <div class="app-topbar">
+        <div class="wordmark" style="font-size:20px;">Profile</div>
+      </div>
+      <div class="profile-scroll">
+        <div class="profile-header">
+          <div class="avatar">AR</div>
+          <div>
+            <div class="profile-name">Alex Reader</div>
+            <div class="profile-email">alex@example.com</div>
+          </div>
+        </div>
+
+        <div class="plan-summary" id="planSummary">
+          <div>
+            <div class="ps-label">Current plan</div>
+            <div class="ps-name" id="psName">Free plan</div>
+            <div class="ps-detail" id="psDetail">30 saved words · 10 AI uses/day</div>
+          </div>
+          <button onclick="openUpgrade()" id="psButton">Upgrade</button>
+        </div>
+
+        <div class="profile-section-title">Sync &amp; backup</div>
+        <div class="profile-row">
+          <div class="pr-left">
+            <div class="pr-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.9V10a4 4 0 014-4h14"/><path d="M7 21.9l-4-4 4-4"/><path d="M21 11.1V14a4 4 0 01-4 4H3"/></svg>
+            </div>
+            <div>
+              <div class="pr-label">Cross-device sync</div>
+              <div class="pr-sub" id="syncSub">Plus feature</div>
+            </div>
+          </div>
+          <label class="switch-toggle">
+            <input type="checkbox" id="syncCheckbox" onchange="toggleSync()">
+            <span class="switch-track" id="syncTrack"></span>
+            <span class="switch-dot" id="syncDot"></span>
+          </label>
+        </div>
+        <div class="profile-row">
+          <div class="pr-left">
+            <div class="pr-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 20h16"/></svg>
+            </div>
+            <div>
+              <div class="pr-label">Back up now</div>
+              <div class="pr-sub" id="backupSub">Last backup: never</div>
+            </div>
+          </div>
+          <span class="pr-action" onclick="backupNow()">Back up</span>
+        </div>
+        <div class="profile-row">
+          <div class="pr-left">
+            <div class="pr-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1015-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+            </div>
+            <div>
+              <div class="pr-label">Restore from backup</div>
+              <div class="pr-sub">Bring back a previous library state</div>
+            </div>
+          </div>
+          <span class="pr-action muted" onclick="restoreBackup()">Restore</span>
+        </div>
+
+        <div class="profile-section-title">Devices</div>
+        <div class="profile-row">
+          <div class="pr-left">
+            <div class="pr-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M11 18h2"/></svg>
+            </div>
+            <div>
+              <div class="pr-label">This device</div>
+              <div class="pr-sub"><span class="device-dot"></span>Active now</div>
+            </div>
+          </div>
+        </div>
+        <div class="profile-row">
+          <div class="pr-left">
+            <div class="pr-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 9h16"/></svg>
+            </div>
+            <div>
+              <div class="pr-label">iPad</div>
+              <div class="pr-sub" id="ipadSub">Sync disabled</div>
+            </div>
+          </div>
+        </div>
+        <div class="profile-row">
+          <div class="pr-left">
+            <div class="pr-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            </div>
+            <div>
+              <div class="pr-label">Web browser</div>
+              <div class="pr-sub" id="webSub">Sync disabled</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-section-title">Account &amp; privacy</div>
+        <div class="profile-row" onclick="showToast('Change your email address')">
+          <div class="pr-left">
+            <div class="pr-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></div>
+            <div class="pr-label">Email address</div>
+          </div>
+          <span class="pr-action muted">Edit</span>
+        </div>
+        <div class="profile-row" onclick="showToast('Change your password')">
+          <div class="pr-left">
+            <div class="pr-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg></div>
+            <div class="pr-label">Password</div>
+          </div>
+          <span class="pr-action muted">Edit</span>
+        </div>
+        <div class="profile-row" onclick="showToast('Manage data & privacy settings')">
+          <div class="pr-left">
+            <div class="pr-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10V6z"/></svg></div>
+            <div class="pr-label">Privacy &amp; data</div>
+          </div>
+          <span class="pr-action muted">View</span>
+        </div>
+        <div class="profile-row" onclick="replayOnboarding()">
+          <div class="pr-left">
+            <div class="pr-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1015-6.7L21 8"/><path d="M21 3v5h-5"/></svg></div>
+            <div class="pr-label">Replay welcome tour</div>
+          </div>
+          <span class="pr-action muted">View</span>
+        </div>
+
+        <button class="signout-btn" onclick="showToast('Signed out')">Sign out</button>
+      </div>
+
+      <div class="tabbar">
+        <div class="tab" onclick="switchTab('library')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+          Library
+        </div>
+        <div class="tab" onclick="switchTab('reader')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+          Reading
+        </div>
+        <div class="tab" onclick="switchTab('vocab')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V6a2 2 0 012-2h13v15H6a2 2 0 00-2 2z"/><path d="M4 19a2 2 0 002 2h13"/></svg>
+          Words
+        </div>
+        <div class="tab active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+          Profile
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <div class="caption-below">Tap any word for the dictionary pop-up, or tap "Ask about this passage" under a paragraph for the AI reading assistant (Simplify, Summarize, Explain terms, Translate — live, powered by Claude). This is a working front-end prototype.</div>
+</div>
+
+<script>
+/* ---------------- Data ---------------- */
+const books = [
+  {title:"The Silent Patient", author:"Alex Michaelides", color:"#6E3B4E", progress:64, tag:"fiction"},
+  {title:"Atomic Habits", author:"James Clear", color:"#4B6B4A", progress:32, tag:"self-dev"},
+  {title:"Sapiens", author:"Yuval Noah Harari", color:"#B8873B", progress:81, tag:"research"},
+  {title:"The Pragmatic Engineer", author:"Gergely Orosz", color:"#2E4C6D", progress:12, tag:"education"},
+];
+const libraryItems = [
+  {title:"The Quiet Power of Reading Slowly", meta:"Article · longform.example", color:"#B8873B", tag:"education"},
+  {title:"Q3 Research Notes.pdf", meta:"PDF · Imported from Drive", color:"#2E4C6D", tag:"research"},
+  {title:"Deep Work", author:"Cal Newport", meta:"Book · EPUB", color:"#4B6B4A", tag:"self-dev"},
+  {title:"Company Handbook.docx", meta:"Document · Imported", color:"#6E3B4E", tag:"business"},
+];
+const tags = ["All","Fiction","Research","Self-dev","Education","Business"];
+
+const dictionary = {
+  "ambiguous": {pos:"adjective", meaning:"Open to more than one interpretation; not having one obvious meaning.", example:"Her reply was deliberately ambiguous.", synonyms:["unclear","vague","equivocal"], origin:"From Latin ambiguus, \u201cdoubtful, shifting.\u201d"},
+  "ephemeral": {pos:"adjective", meaning:"Lasting for a very short time.", example:"The joy of finishing a good book is ephemeral, but the ideas can stay for years.", synonyms:["fleeting","transient","momentary"], origin:"From Greek ephemeros, \u201clasting only a day.\u201d"},
+  "eloquent": {pos:"adjective", meaning:"Fluent and persuasive in speaking or writing.", example:"She made an eloquent case for reading before bed.", synonyms:["articulate","expressive","fluent"], origin:"From Latin eloqui, \u201cto speak out.\u201d"},
+  "resilience": {pos:"noun", meaning:"The capacity to recover quickly from difficulty.", example:"Slow reading builds a kind of mental resilience.", synonyms:["toughness","adaptability","hardiness"], origin:"From Latin resilire, \u201cto rebound, spring back.\u201d"},
+  "nostalgia": {pos:"noun", meaning:"A sentimental longing for the past.", example:"The smell of an old paperback brings a wave of nostalgia.", synonyms:["longing","reminiscence","wistfulness"], origin:"From Greek nostos (return home) + algos (pain).\u201d"},
+  "serendipity": {pos:"noun", meaning:"The occurrence of finding something valuable by chance.", example:"Browsing a library shelf still offers a kind of serendipity an algorithm can't.", synonyms:["chance","fortune","luck"], origin:"Coined by Horace Walpole in 1754, from the Persian tale The Three Princes of Serendip."},
+  "immersive": {pos:"adjective", meaning:"Providing deep involvement or absorption in an activity.", example:"A quiet room makes for a more immersive reading session.", synonyms:["engrossing","absorbing","captivating"], origin:"From Latin immergere, \u201cto dip into.\u201d"},
+  "fragmented": {pos:"adjective", meaning:"Broken up into small, disconnected parts.", example:"Constant notifications leave our attention fragmented.", synonyms:["disjointed","scattered","broken"], origin:"From Latin fragmentum, \u201ca piece broken off.\u201d"},
+  "deliberate": {pos:"adjective", meaning:"Done consciously and intentionally.", example:"Reading slowly is a deliberate act of attention.", synonyms:["intentional","purposeful","calculated"], origin:"From Latin deliberare, \u201cto weigh well.\u201d"},
+  "cognition": {pos:"noun", meaning:"The mental action of acquiring knowledge and understanding.", example:"Researchers study how reading shapes cognition over a lifetime.", synonyms:["thinking","perception","understanding"], origin:"From Latin cognoscere, \u201cto get to know.\u201d"}
+};
+
+const articleParagraphs = [
+  "There is something quietly radical about reading a single page slowly, all the way through, without reaching for another tab. It sounds simple, almost too simple to write about. And yet for many of us it has become an <span class='w' data-word='ambiguous'>ambiguous</span> skill \u2014 something we know we can still do, but rarely choose to.",
+  "Attention today is <span class='w' data-word='fragmented'>fragmented</span> by design. Every app on your phone is quietly competing for the same narrow resource: the next thirty seconds of your focus. A book, by contrast, asks for something rarer \u2014 a <span class='w' data-word='deliberate'>deliberate</span>, sustained kind of attention that unfolds over hours, not seconds.",
+  "Researchers who study <span class='w' data-word='cognition'>cognition</span> have long argued that deep reading changes the way we think, not just what we know. It builds a kind of mental <span class='w' data-word='resilience'>resilience</span> \u2014 the ability to sit with a difficult idea instead of skipping past it. That feeling can be <span class='w' data-word='ephemeral'>ephemeral</span>, but its effects tend to linger.",
+  "There is also plain <span class='w' data-word='nostalgia'>nostalgia</span> in it \u2014 the memory of finishing a book as a child and feeling, briefly, like you understood something the world hadn't told you yet. Good writers are <span class='w' data-word='eloquent'>eloquent</span> enough to recreate that feeling for adults too, if we let a story be <span class='w' data-word='immersive'>immersive</span> instead of skimming for the ending.",
+  "And sometimes the reward is just <span class='w' data-word='serendipity'>serendipity</span> \u2014 an idea you weren't looking for, on a page you almost skipped."
+];
+
+let vocabWords = [];
+let activeCardWord = null;
+let currentFontSize = 16;
+let smartOn = true;
+
+const collections = [
+  {name:"Research", color:"#2E4C6D", tag:"research"},
+  {name:"Fiction", color:"#6E3B4E", tag:"fiction"},
+  {name:"Self-development", color:"#4B6B4A", tag:"self-dev"},
+  {name:"Work", color:"#B8873B", tag:"business"},
+];
+let activeCollectionFilter = null;
+let showFavoritesOnly = false;
+let favoritesSet = new Set();
+
+let isPremium = false;
+let aiFreeUsesLeft = 10;
+const FREE_VOCAB_LIMIT = 30;
+
+let practiceIndex = 0;
+let practiceRevealed = false;
+
+let highlights = [];
+let bookmarkedArticles = new Set();
+let purchasedPlanId = null;
+let syncEnabled = false;
+let lastBackupTime = null;
+
+/* ---------------- Render: Library ---------------- */
+function renderTags(){
+  const row = document.getElementById('tagRow');
+  row.innerHTML = tags.map((t,i)=>`<div class="tag-pill ${i===0?'active':''}" onclick="selectTag(this)">${t}</div>`).join('');
+}
+function selectTag(el){
+  document.querySelectorAll('.tag-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+}
+function renderContinueShelf(){
+  const shelf = document.getElementById('continueShelf');
+  shelf.innerHTML = books.map(b=>`
+    <div class="book-card">
+      <div class="cover" style="background:${b.color}" onclick="switchTab('reader')">
+        <span>${b.title}</span>
+        <div class="fav-star ${favoritesSet.has(b.title) ? 'active' : ''}" onclick="event.stopPropagation(); toggleFavorite('${b.title.replace(/'/g,"\\'")}')">
+          <svg viewBox="0 0 24 24" fill="${favoritesSet.has(b.title) ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M12 3l2.5 6.5L21 10l-5 4.5L17.5 21 12 17.5 6.5 21 8 14.5 3 10l6.5-.5z"/></svg>
+        </div>
+      </div>
+      <div class="book-meta">${b.author}</div>
+      <div class="progress-track"><div class="progress-fill" style="width:${b.progress}%"></div></div>
+    </div>
+  `).join('');
+}
+function renderCollections(){
+  const shelf = document.getElementById('collectionsShelf');
+  shelf.innerHTML = collections.map(c=>{
+    const count = libraryItems.filter(i=>i.tag===c.tag).length;
+    return `<div class="collection-card" style="background:${c.color}" onclick="filterByCollection('${c.tag}')">
+      <div class="name">${c.name}</div>
+      <div class="count">${count} item${count===1?'':'s'}</div>
+    </div>`;
+  }).join('') + `<div class="collection-new" onclick="createCollection()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+      New folder
+    </div>`;
+}
+function filterByCollection(tag){
+  activeCollectionFilter = tag;
+  document.getElementById('clearFilter').style.display = 'inline';
+  renderLibraryList();
+  const name = collections.find(c=>c.tag===tag)?.name || tag;
+  showToast('Showing: ' + name);
+}
+function clearCollectionFilter(){
+  activeCollectionFilter = null;
+  showFavoritesOnly = false;
+  document.getElementById('clearFilter').style.display = 'none';
+  document.getElementById('favToggle').classList.remove('active');
+  renderLibraryList();
+}
+function toggleFavoritesFilter(){
+  showFavoritesOnly = !showFavoritesOnly;
+  document.getElementById('favToggle').classList.toggle('active', showFavoritesOnly);
+  document.getElementById('clearFilter').style.display = (showFavoritesOnly || activeCollectionFilter) ? 'inline' : 'none';
+  renderLibraryList();
+}
+function toggleFavorite(title){
+  if(favoritesSet.has(title)){ favoritesSet.delete(title); showToast('Removed from Favorites'); }
+  else { favoritesSet.add(title); showToast('Added to Favorites'); }
+  renderContinueShelf();
+  renderLibraryList();
+}
+function createCollection(){
+  const name = prompt('Name your new collection:');
+  if(name && name.trim()){
+    collections.push({name:name.trim(), color:"#4B6B4A", tag:name.trim().toLowerCase().replace(/\s+/g,'-')});
+    renderCollections();
+    showToast('Created "' + name.trim() + '"');
+  }
+}
+
+const LIB_SHEETS = ['searchSheet','upgradeSheet','importSheet','pasteSheet','webSheet'];
+function closeAllLibSheets(){
+  LIB_SHEETS.forEach(id => document.getElementById(id).classList.remove('open'));
+  document.getElementById('libDim').classList.remove('show');
+}
+function showLibSheet(id){
+  closeAllLibSheets();
+  document.getElementById(id).classList.add('open');
+  document.getElementById('libDim').classList.add('show');
+}
+
+const READER_SHEETS = ['settingsSheet','highlightsSheet','shareSheet'];
+function closeAllReaderSheets(){
+  READER_SHEETS.forEach(id => document.getElementById(id).classList.remove('open'));
+  document.getElementById('readerDim').classList.remove('show');
+}
+function showReaderSheet(id){
+  closeAllReaderSheets();
+  closeCard();
+  document.getElementById(id).classList.add('open');
+  document.getElementById('readerDim').classList.add('show');
+}
+
+function openSearch(){
+  showLibSheet('searchSheet');
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchResults').innerHTML = '';
+  setTimeout(()=>document.getElementById('searchInput').focus(), 250);
+}
+function closeSearch(){ closeAllLibSheets(); }
+function runSearch(query){
+  const q = query.trim().toLowerCase();
+  const results = document.getElementById('searchResults');
+  if(q.length === 0){ results.innerHTML = ''; return; }
+  const allItems = [
+    ...books.map(b=>({title:b.title, meta:b.author, color:b.color})),
+    ...libraryItems.map(i=>({title:i.title, meta:i.meta, color:i.color}))
+  ];
+  const matches = allItems.filter(i => i.title.toLowerCase().includes(q) || (i.meta && i.meta.toLowerCase().includes(q)));
+  if(matches.length === 0){
+    results.innerHTML = `<div class="search-empty">No matches for "${query}" — try a different title or author.</div>`;
+    return;
+  }
+  results.innerHTML = matches.map(item=>`
+    <div class="list-item" onclick="closeSearch(); switchTab('reader');">
+      <div class="list-thumb" style="background:${item.color}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+      </div>
+      <div class="list-text"><div class="t">${item.title}</div><div class="s">${item.meta}</div></div>
+    </div>
+  `).join('');
+}
+
+function openUpgrade(){
+  showLibSheet('upgradeSheet');
+  renderPlans();
+}
+function closeUpgrade(){ closeAllLibSheets(); }
+
+const plans = [
+  {id:'monthly', label:'Monthly', price:'R29', sub:'billed monthly'},
+  {id:'quarterly', label:'3 Months', price:'R69', sub:'R23/mo'},
+  {id:'biannual', label:'6 Months', price:'R129', sub:'R21.50/mo'},
+  {id:'yearly', label:'Yearly', price:'R189', sub:'R15.75/mo', badge:'Best value'},
+];
+let selectedPlan = 'monthly';
+
+function renderPlans(){
+  const grid = document.getElementById('planGrid');
+  grid.innerHTML = plans.map(p => `
+    <div class="plan-card ${p.id === selectedPlan ? 'active' : ''}" onclick="selectPlan('${p.id}')">
+      ${p.badge ? `<div class="badge">${p.badge}</div>` : ''}
+      <div class="p-label">${p.label}</div>
+      <div class="p-price">${p.price}</div>
+      <div class="p-sub">${p.sub}</div>
+    </div>
+  `).join('');
+  updateUpgradeCta();
+}
+function selectPlan(id){
+  selectedPlan = id;
+  renderPlans();
+}
+function updateUpgradeCta(){
+  const p = plans.find(pl => pl.id === selectedPlan);
+  const btn = document.getElementById('upgradeCta');
+  const suffix = p.id === 'monthly' ? '/month' : p.id === 'quarterly' ? ' / 3 months' : p.id === 'biannual' ? ' / 6 months' : '/year';
+  btn.textContent = `Upgrade — ${p.price}${suffix}`;
+}
+
+function handlePlanPillClick(){
+  if(isPremium){ switchTab('profile'); }
+  else { openUpgrade(); }
+}
+function upgradeNow(){
+  isPremium = true;
+  purchasedPlanId = selectedPlan;
+  document.body.classList.add('premium');
+  document.getElementById('planPill').textContent = 'EasyWord Plus';
+  closeUpgrade();
+  const p = plans.find(pl => pl.id === selectedPlan);
+  showToast(`Welcome to EasyWord Plus — ${p.price} plan ✦`);
+  renderProfile();
+}
+function downloadOffline(){
+  if(!isPremium){ openUpgrade(); return; }
+  showToast('Downloaded for offline reading');
+}
+
+function renderLibraryList(){
+  const list = document.getElementById('libraryList');
+  let items = activeCollectionFilter ? libraryItems.filter(i=>i.tag===activeCollectionFilter) : libraryItems.slice();
+  if(showFavoritesOnly) items = items.filter(i=>favoritesSet.has(i.title));
+
+  if(items.length === 0){
+    list.innerHTML = `<div class="search-empty">${showFavoritesOnly ? 'No favorites yet — tap the star on anything to save it here.' : 'Nothing in this collection yet.'}</div>`;
+    return;
+  }
+  list.innerHTML = items.map(item=>{
+    const isFav = favoritesSet.has(item.title);
+    return `
+    <div class="list-item">
+      <div style="display:flex; align-items:center; gap:12px; flex:1; min-width:0;" onclick="switchTab('reader')">
+        <div class="list-thumb" style="background:${item.color}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        </div>
+        <div class="list-text" style="min-width:0;">
+          <div class="t">${item.title}</div>
+          <div class="s">${item.meta}</div>
+        </div>
+      </div>
+      <div class="fav-star-inline ${isFav ? 'active' : ''}" onclick="event.stopPropagation(); toggleFavorite('${item.title.replace(/'/g,"\\'")}')">
+        <svg viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M12 3l2.5 6.5L21 10l-5 4.5L17.5 21 12 17.5 6.5 21 8 14.5 3 10l6.5-.5z"/></svg>
+      </div>
+    </div>
+  `;}).join('');
+}
+
+/* ---------------- Render: Reader ---------------- */
+function renderArticle(){
+  document.getElementById('readerText').innerHTML = articleParagraphs.map((p,i)=>`
+    <div class="passage" data-idx="${i}">
+      <p id="para-${i}">${p}</p>
+      <div class="note-pill" id="notepill-${i}" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>
+        <span id="notepilltext-${i}"></span>
+      </div>
+      <div class="passage-actions-row">
+        <div class="assist-trigger" onclick="toggleToolbar(${i})">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l1.8 5.6L19 9l-5.2 1.4L12 16l-1.8-5.6L5 9l5.2-1.4z"/></svg>
+          Ask about this passage
+        </div>
+        <div class="highlight-trigger" onclick="toggleHighlightPopover(${i})">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l6-6 4 4-6 6H9v-4z"/><path d="M4 20l4-1 9-9"/></svg>
+          Highlight
+        </div>
+      </div>
+      <div class="highlight-popover" id="hlpop-${i}">
+        <div class="hl-color-row">
+          <div class="hl-dot" style="background:#D8B679" onclick="setHighlight(${i},'yellow')"></div>
+          <div class="hl-dot" style="background:#8FAE8E" onclick="setHighlight(${i},'green')"></div>
+          <div class="hl-dot" style="background:#B98A9C" onclick="setHighlight(${i},'pink')"></div>
+          <button class="hl-note-btn" onclick="toggleNoteArea(${i})">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>
+            Add note
+          </button>
+          <button class="hl-remove" onclick="removeHighlight(${i})">Clear</button>
+        </div>
+        <div class="hl-note-area" id="notearea-${i}">
+          <textarea id="noteinput-${i}" placeholder="Write a note about this passage..."></textarea>
+          <button class="hl-note-save" onclick="saveNote(${i})">Save note</button>
+        </div>
+      </div>
+      <div class="assist-toolbar" id="toolbar-${i}">
+        <button class="assist-btn" onclick="runAssist(${i},'simplify')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16M4 6h10M4 18h7"/></svg>
+          Simplify
+        </button>
+        <button class="assist-btn" onclick="runAssist(${i},'summarize')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h5"/></svg>
+          Summarize
+        </button>
+        <button class="assist-btn" onclick="runAssist(${i},'explain')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 17v-.5M12 13.5c0-2 2.2-2 2.2-4A2.2 2.2 0 0012 7a2.2 2.2 0 00-2.2 2.2"/></svg>
+          Explain terms
+          <span class="lock-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a5 5 0 00-5 5v3H6a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2v-8a2 2 0 00-2-2h-1V7a5 5 0 00-5-5zm0 2a3 3 0 013 3v3H9V7a3 3 0 013-3z"/></svg></span>
+        </button>
+        <button class="assist-btn" onclick="runAssist(${i},'translate')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18 14 14 0 010-18"/></svg>
+          Translate
+          <span class="lock-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a5 5 0 00-5 5v3H6a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2v-8a2 2 0 00-2-2h-1V7a5 5 0 00-5-5zm0 2a3 3 0 013 3v3H9V7a3 3 0 013-3z"/></svg></span>
+        </button>
+      </div>
+      <div class="assist-response" id="response-${i}"></div>
+    </div>
+  `).join('');
+  attachWordHandlers();
+  applyHighlightsToDOM();
+}
+
+function toggleToolbar(idx){
+  const tb = document.getElementById('toolbar-'+idx);
+  const isOpen = tb.classList.contains('open');
+  document.querySelectorAll('.assist-toolbar').forEach(t=>t.classList.remove('open'));
+  document.querySelectorAll('.highlight-popover').forEach(t=>t.classList.remove('open'));
+  if(!isOpen) tb.classList.add('open');
+}
+
+function toggleHighlightPopover(idx){
+  const pop = document.getElementById('hlpop-'+idx);
+  const isOpen = pop.classList.contains('open');
+  document.querySelectorAll('.highlight-popover').forEach(t=>t.classList.remove('open'));
+  document.querySelectorAll('.assist-toolbar').forEach(t=>t.classList.remove('open'));
+  if(!isOpen) pop.classList.add('open');
+  updateHighlightDots(idx);
+}
+function updateHighlightDots(idx){
+  const existing = highlights.find(h=>h.idx===idx);
+  const pop = document.getElementById('hlpop-'+idx);
+  pop.querySelectorAll('.hl-dot').forEach(d=>d.classList.remove('active'));
+  if(existing){
+    const order = ['yellow','green','pink'];
+    const dotIndex = order.indexOf(existing.color);
+    if(dotIndex >= 0) pop.querySelectorAll('.hl-dot')[dotIndex].classList.add('active');
+  }
+}
+function setHighlight(idx, color){
+  let entry = highlights.find(h=>h.idx===idx);
+  if(entry){ entry.color = color; }
+  else { highlights.push({idx, color, note:''}); }
+  applyHighlightsToDOM();
+  updateHighlightDots(idx);
+  showToast('Highlighted');
+}
+function removeHighlight(idx){
+  highlights = highlights.filter(h=>h.idx!==idx);
+  document.getElementById('hlpop-'+idx).classList.remove('open');
+  applyHighlightsToDOM();
+  showToast('Highlight removed');
+}
+function toggleNoteArea(idx){
+  const area = document.getElementById('notearea-'+idx);
+  area.classList.toggle('open');
+  const entry = highlights.find(h=>h.idx===idx);
+  document.getElementById('noteinput-'+idx).value = entry ? entry.note || '' : '';
+}
+function saveNote(idx){
+  const text = document.getElementById('noteinput-'+idx).value.trim();
+  let entry = highlights.find(h=>h.idx===idx);
+  if(!entry){ entry = {idx, color:'yellow', note:text}; highlights.push(entry); }
+  else { entry.note = text; }
+  applyHighlightsToDOM();
+  document.getElementById('hlpop-'+idx).classList.remove('open');
+  showToast(text ? 'Note saved' : 'Note cleared');
+}
+function applyHighlightsToDOM(){
+  document.querySelectorAll('.passage p[id^="para-"]').forEach(p=>{
+    p.classList.remove('hl-yellow','hl-green','hl-pink');
+  });
+  document.querySelectorAll('.note-pill').forEach(np => np.style.display = 'none');
+  highlights.forEach(h=>{
+    const p = document.getElementById('para-'+h.idx);
+    if(p) p.classList.add('hl-'+h.color);
+    if(h.note && h.note.trim()){
+      const pill = document.getElementById('notepill-'+h.idx);
+      const pillText = document.getElementById('notepilltext-'+h.idx);
+      if(pill && pillText){ pillText.textContent = h.note; pill.style.display = 'inline-flex'; }
+    }
+  });
+}
+
+/* ---------------- Bookmarks ---------------- */
+function toggleBookmark(){
+  const title = document.getElementById('readerTitleText').textContent;
+  const btn = document.getElementById('bookmarkBtn');
+  if(bookmarkedArticles.has(title)){
+    bookmarkedArticles.delete(title);
+    btn.classList.remove('active');
+    showToast('Bookmark removed');
+  } else {
+    bookmarkedArticles.add(title);
+    btn.classList.add('active');
+    showToast('Bookmarked "' + title + '"');
+  }
+}
+function syncBookmarkIcon(){
+  const title = document.getElementById('readerTitleText').textContent;
+  document.getElementById('bookmarkBtn').classList.toggle('active', bookmarkedArticles.has(title));
+}
+
+/* ---------------- Highlights sheet ---------------- */
+function openHighlightsSheet(){
+  const list = document.getElementById('highlightsList');
+  if(highlights.length === 0){
+    list.innerHTML = `<div class="search-empty">No highlights yet — tap "Highlight" under any paragraph while reading.</div>`;
+  } else {
+    const colorHex = {yellow:'#D8B679', green:'#8FAE8E', pink:'#B98A9C'};
+    list.innerHTML = highlights.slice().sort((a,b)=>a.idx-b.idx).map(h=>{
+      const raw = articleParagraphs[h.idx].replace(/<[^>]+>/g,'');
+      const snippet = raw.length > 110 ? raw.slice(0,110) + '…' : raw;
+      return `<div class="hl-list-item">
+        <div class="hl-swatch" style="background:${colorHex[h.color]}"></div>
+        <div class="hl-list-text">
+          <div class="hl-list-snippet">${snippet}</div>
+          ${h.note ? `<div class="hl-list-note">"${h.note}"</div>` : ''}
+          <span class="hl-goto" onclick="goToParagraph(${h.idx})">Go to passage →</span>
+        </div>
+        <button class="hl-remove" onclick="removeHighlight(${h.idx}); openHighlightsSheet();">Remove</button>
+      </div>`;
+    }).join('');
+  }
+  showReaderSheet('highlightsSheet');
+}
+function closeHighlightsSheet(){ closeAllReaderSheets(); }
+function goToParagraph(idx){
+  closeHighlightsSheet();
+  const el = document.getElementById('para-'+idx);
+  if(el) el.scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+/* ---------------- Share & Export ---------------- */
+function openShareSheet(){ showReaderSheet('shareSheet'); }
+function closeShareSheet(){ closeAllReaderSheets(); }
+
+function getArticlePlainText(){
+  return articleParagraphs.map(p => p.replace(/<[^>]+>/g,'')).join('\n\n');
+}
+function downloadTextFile(filename, content){
+  const blob = new Blob([content], {type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function shareArticle(){
+  const title = document.getElementById('readerTitleText').textContent;
+  const text = getArticlePlainText();
+  if(navigator.share){
+    navigator.share({title, text: text.slice(0, 500)}).catch(()=>{});
+  } else {
+    showToast('Sharing isn\'t available in this preview — try Copy instead');
+  }
+  closeAllReaderSheets();
+}
+function copyArticleText(){
+  const text = getArticlePlainText();
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>{
+      showToast('Article copied to clipboard');
+    }).catch(()=>{
+      showToast('Could not copy — clipboard access blocked');
+    });
+  } else {
+    showToast('Clipboard not available in this preview');
+  }
+  closeAllReaderSheets();
+}
+function exportHighlights(){
+  const title = document.getElementById('readerTitleText').textContent;
+  if(highlights.length === 0){
+    showToast('No highlights or notes to export yet');
+    closeAllReaderSheets();
+    return;
+  }
+  const colorNames = {yellow:'Yellow', green:'Green', pink:'Pink'};
+  let content = `${title}\nHighlights & notes — exported from EasyWord\n${'='.repeat(40)}\n\n`;
+  highlights.slice().sort((a,b)=>a.idx-b.idx).forEach(h=>{
+    const raw = articleParagraphs[h.idx].replace(/<[^>]+>/g,'');
+    content += `[${colorNames[h.color] || h.color} highlight]\n"${raw}"\n`;
+    if(h.note && h.note.trim()) content += `Note: ${h.note}\n`;
+    content += '\n';
+  });
+  downloadTextFile(title.replace(/[^a-z0-9]+/gi,'-').toLowerCase() + '-highlights.txt', content);
+  showToast('Highlights exported');
+  closeAllReaderSheets();
+}
+
+async function runAssist(idx, action){
+  const passageText = articleParagraphs[idx].replace(/<[^>]+>/g,'');
+  const responseEl = document.getElementById('response-'+idx);
+  const labels = {simplify:'Simplified', summarize:'Summary', explain:'Key terms explained', translate:'Spanish translation'};
+
+  const isPremiumAction = (action === 'explain' || action === 'translate');
+  if(isPremiumAction && !isPremium){
+    document.getElementById('toolbar-'+idx).classList.remove('open');
+    openUpgrade();
+    return;
+  }
+  if(!isPremiumAction && !isPremium){
+    if(aiFreeUsesLeft <= 0){
+      document.getElementById('toolbar-'+idx).classList.remove('open');
+      showToast("You've used today's free AI lookups");
+      openUpgrade();
+      return;
+    }
+    aiFreeUsesLeft -= 1;
+  }
+
+  document.getElementById('toolbar-'+idx).classList.remove('open');
+  responseEl.classList.add('open');
+  responseEl.innerHTML = `<div class="assist-label">${labels[action]}</div><div class="assist-loading"><span class="spin"></span> Thinking...</div>`;
+
+  const prompts = {
+    simplify: `Rewrite the following passage in much simpler, plain everyday language, in 2-3 short sentences max. Only output the rewritten passage, nothing else, no preamble.\n\nPassage: "${passageText}"`,
+    summarize: `Summarize the following passage in exactly one short sentence. Only output the summary, nothing else, no preamble.\n\nPassage: "${passageText}"`,
+    explain: `Identify up to 2 difficult or less common words or phrases in the following passage and briefly explain each in plain language, formatted as "word — explanation" on separate lines. Only output that list, nothing else, no preamble.\n\nPassage: "${passageText}"`,
+    translate: `Translate the following passage into Spanish. Only output the translation, nothing else, no preamble.\n\nPassage: "${passageText}"`
+  };
+
+  try{
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        messages: [{ role: "user", content: prompts[action] }]
+      })
+    });
+    const data = await res.json();
+    const textBlock = (data.content || []).find(c => c.type === 'text');
+    const output = textBlock ? textBlock.text.trim() : "Couldn't generate a response right now.";
+    responseEl.innerHTML = `<div class="assist-label">${labels[action]}</div><div class="assist-text">${output}</div><button class="assist-close" onclick="closeResponse(${idx})">Close</button>`;
+  }catch(err){
+    responseEl.innerHTML = `<div class="assist-label">${labels[action]}</div><div class="assist-text">Couldn't reach the reading assistant just now. Please try again.</div><button class="assist-close" onclick="closeResponse(${idx})">Close</button>`;
+  }
+}
+
+function closeResponse(idx){
+  const el = document.getElementById('response-'+idx);
+  el.classList.remove('open');
+  el.innerHTML = '';
+}
+function attachWordHandlers(){
+  document.querySelectorAll('.w').forEach(el=>{
+    el.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      document.querySelectorAll('.w').forEach(x=>x.classList.remove('tapped'));
+      el.classList.add('tapped');
+      showDefinition(el);
+    });
+  });
+}
+
+/* ---------------- Definition card ---------------- */
+function showDefinition(el){
+  const word = el.dataset.word;
+  activeCardWord = word;
+  const data = dictionary[word] || {pos:"unknown", meaning:"No definition found for this word yet.", example:"—", synonyms:[], origin:"—"};
+
+  document.getElementById('defWord').textContent = word;
+  document.getElementById('defPos').textContent = data.pos;
+  document.getElementById('defMeaning').textContent = data.meaning;
+  document.getElementById('defExample').textContent = data.example;
+  document.getElementById('defOrigin').textContent = data.origin;
+  document.getElementById('defSynonyms').innerHTML = data.synonyms.map(s=>`<span class="mini-chip">${s}</span>`).join('');
+
+  // collapse extra + reset save state visuals
+  const extra = document.getElementById('defExtra');
+  extra.classList.remove('open');
+  document.getElementById('moreBtn').innerHTML = 'See more <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>';
+
+  const saveBtn = document.getElementById('saveBtn');
+  const already = vocabWords.includes(word);
+  saveBtn.classList.toggle('saved', already);
+  saveBtn.innerHTML = already
+    ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M19 21l-7-4-7 4V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg> Saved'
+    : '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21l-7-4-7 4V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg> Save';
+
+  // position near word
+  const card = document.getElementById('defCard');
+  const body = document.getElementById('readerBody');
+  const bodyRect = body.getBoundingClientRect();
+  const wordRect = el.getBoundingClientRect();
+
+  card.style.visibility = 'hidden';
+  card.classList.add('show');
+  const cardHeight = card.offsetHeight;
+  card.classList.remove('show');
+  card.style.visibility = 'visible';
+
+  let top = (wordRect.top - bodyRect.top) + body.scrollTop - cardHeight - 14;
+  let arrowTop = false;
+  if(top < body.scrollTop + 4){
+    top = (wordRect.bottom - bodyRect.top) + body.scrollTop + 12;
+    arrowTop = true;
+  }
+  let left = (wordRect.left - bodyRect.left) - 20;
+  left = Math.max(8, Math.min(left, bodyRect.width - 268));
+
+  card.style.top = top + 'px';
+  card.style.left = left + 'px';
+  card.classList.toggle('arrow-top', arrowTop);
+
+  document.getElementById('backdrop').classList.add('show');
+  requestAnimationFrame(()=> card.classList.add('show'));
+}
+function closeCard(){
+  document.getElementById('defCard').classList.remove('show');
+  document.getElementById('backdrop').classList.remove('show');
+  document.querySelectorAll('.w').forEach(x=>x.classList.remove('tapped'));
+}
+function toggleMore(){
+  const extra = document.getElementById('defExtra');
+  const open = extra.classList.toggle('open');
+  document.getElementById('moreBtn').innerHTML = (open ? 'See less' : 'See more') +
+    ` <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="transform:rotate(${open?180:0}deg)"><path d="M6 9l6 6 6-6"/></svg>`;
+}
+function toggleSave(){
+  if(!activeCardWord) return;
+  const idx = vocabWords.indexOf(activeCardWord);
+  if(idx === -1){
+    if(!isPremium && vocabWords.length >= FREE_VOCAB_LIMIT){
+      closeCard();
+      openUpgrade();
+      return;
+    }
+    vocabWords.push(activeCardWord);
+    showToast('"' + activeCardWord + '" saved to Your Words');
+    document.querySelectorAll(`.w[data-word="${activeCardWord}"]`).forEach(x=>x.classList.add('saved-word'));
+  } else {
+    vocabWords.splice(idx,1);
+    showToast('Removed from Your Words');
+    document.querySelectorAll(`.w[data-word="${activeCardWord}"]`).forEach(x=>x.classList.remove('saved-word'));
+  }
+  const saveBtn = document.getElementById('saveBtn');
+  const already = vocabWords.includes(activeCardWord);
+  saveBtn.classList.toggle('saved', already);
+  saveBtn.innerHTML = already
+    ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M19 21l-7-4-7 4V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg> Saved'
+    : '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21l-7-4-7 4V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg> Save';
+  renderVocab();
+}
+function speakWord(){
+  if(!activeCardWord) return;
+  try{
+    const u = new SpeechSynthesisUtterance(activeCardWord);
+    u.rate = 0.9;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+  }catch(e){ showToast('Audio pronunciation'); }
+}
+function speakArticle(){
+  try{
+    const text = articleParagraphs.map(p=>p.replace(/<[^>]+>/g,'')).join(' ');
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.95;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+    showToast('Reading article aloud');
+  }catch(e){ showToast('Text-to-speech'); }
+}
+
+/* ---------------- Reading settings ---------------- */
+function openSheet(){ showReaderSheet('settingsSheet'); }
+function closeSheet(){ closeAllReaderSheets(); }
+function changeFont(delta){
+  currentFontSize = Math.max(13, Math.min(22, currentFontSize + delta));
+  document.getElementById('readerText').style.fontSize = currentFontSize + 'px';
+  document.getElementById('fontLabel').textContent = currentFontSize;
+}
+function setTheme(el, bg, text){
+  document.querySelectorAll('.theme-dot').forEach(d=>d.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('screen-reader').style.background = bg;
+  document.getElementById('readerBody').style.color = text;
+  document.getElementById('readerText').style.color = text;
+  document.getElementById('readerTitleText').style.color = text;
+}
+function toggleSmart(){
+  smartOn = document.getElementById('smartToggle').checked;
+  document.getElementById('smartState').textContent = smartOn ? 'ON' : 'OFF';
+  document.getElementById('toggleTrack').style.background = smartOn ? 'var(--moss)' : '#c9c2b2';
+  document.getElementById('toggleDot').style.left = smartOn ? '19px' : '3px';
+  document.getElementById('smartBanner').style.display = smartOn ? 'flex' : 'none';
+}
+
+/* ---------------- Vocabulary ---------------- */
+function exportVocabulary(){
+  if(vocabWords.length === 0){
+    showToast('Save some words first to export them');
+    return;
+  }
+  let content = `EasyWord — Your Vocabulary\n${'='.repeat(30)}\n\n`;
+  vocabWords.forEach(w=>{
+    const d = dictionary[w];
+    content += `${w} (${d.pos})\n${d.meaning}\nExample: ${d.example}\n\n`;
+  });
+  downloadTextFile('easyword-vocabulary.txt', content);
+  showToast('Vocabulary exported');
+}
+
+function renderVocab(){
+  const list = document.getElementById('vocabList');
+  document.getElementById('statSaved').textContent = vocabWords.length;
+  if(vocabWords.length === 0){
+    list.innerHTML = `<div class="empty-vocab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19V6a2 2 0 012-2h13v15H6a2 2 0 00-2 2z"/><path d="M4 19a2 2 0 002 2h13"/></svg><br>
+      Tap any word while reading and hit <b>Save</b> — it'll show up here, ready to review as flashcards.
+    </div>`;
+    return;
+  }
+  list.innerHTML = vocabWords.map((w,i)=>{
+    const d = dictionary[w];
+    return `<div class="vocab-card">
+      <div>
+        <div class="vocab-word">${w}</div>
+        <div class="vocab-def">${d.meaning}</div>
+        <div class="vocab-src">From: The Quiet Power of Reading Slowly</div>
+      </div>
+      <div class="quiz-btn" onclick="startPractice(${i})">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--moss)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ---------------- Tabs / toast ---------------- */
+function switchTab(name){
+  closeAllLibSheets();
+  closeAllReaderSheets();
+  closeCard();
+  closePractice();
+  document.getElementById('screen-library').style.display = name==='library' ? 'flex' : 'none';
+  document.getElementById('screen-reader').classList.toggle('active', name==='reader');
+  document.getElementById('screen-reader').style.display = name==='reader' ? 'flex' : 'none';
+  document.getElementById('screen-vocab').style.display = name==='vocab' ? 'flex' : 'none';
+  document.getElementById('screen-profile').style.display = name==='profile' ? 'flex' : 'none';
+  if(name==='vocab') renderVocab();
+  if(name==='profile') renderProfile();
+}
+let toastTimer;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> t.classList.remove('show'), 1800);
+}
+
+/* ---------------- Import / Paste / Save from Web ---------------- */
+function openImportSheet(){ showLibSheet('importSheet'); }
+function closeImportSheet(){ closeAllLibSheets(); }
+function openPasteSheet(){
+  showLibSheet('pasteSheet');
+  document.getElementById('pasteTitle').value = '';
+  document.getElementById('pasteArea').value = '';
+}
+function closePasteSheet(){ closeAllLibSheets(); }
+function openWebSheet(){
+  showLibSheet('webSheet');
+  document.getElementById('webUrlInput').value = '';
+  document.getElementById('webSaveBtn').textContent = 'Save & read';
+}
+function closeWebSheet(){ closeAllLibSheets(); }
+
+// Wraps every word in a block of plain text so it becomes tappable for the dictionary
+function wrapWords(text){
+  return text.replace(/([A-Za-z']+)/g, (match) => {
+    const clean = match.toLowerCase().replace(/'/g, '');
+    return `<span class="w" data-word="${clean}">${match}</span>`;
+  });
+}
+
+function addToLibrary(title, meta, color, tag){
+  libraryItems.unshift({title, meta, color, tag});
+  renderLibraryList();
+  renderCollections();
+}
+
+function openReaderWithContent(title, byline, rawParagraphs, bannerText){
+  document.getElementById('readerTitleText').textContent = title;
+  document.getElementById('readerBylineText').textContent = byline;
+  document.getElementById('smartBannerText').textContent = bannerText;
+  document.getElementById('smartBanner').style.display = smartOn ? 'flex' : 'none';
+
+  articleParagraphs.length = 0;
+  rawParagraphs.forEach(p => articleParagraphs.push(wrapWords(p)));
+  highlights = [];
+  renderArticle();
+  syncBookmarkIcon();
+  switchTab('reader');
+}
+
+function handleFileImport(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const ext = file.name.split('.').pop().toUpperCase();
+  const colors = {TXT:"#4B6B4A", PDF:"#6E3B4E", DOC:"#2E4C6D", DOCX:"#2E4C6D", EPUB:"#B8873B"};
+  const color = colors[ext] || "#4B6B4A";
+
+  if(ext === 'TXT'){
+    const reader = new FileReader();
+    reader.onload = function(e){
+      const text = e.target.result;
+      const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+      addToLibrary(file.name, `TXT · Imported from device`, color, 'imported');
+      closeImportSheet();
+      showToast('Imported "' + file.name + '"');
+      openReaderWithContent(file.name.replace(/\.txt$/i,''), `Imported · ${Math.round(text.split(/\s+/).length)} words`, paragraphs.length ? paragraphs : [text], 'Ready to read — formatted for your screen');
+    };
+    reader.readAsText(file);
+  } else {
+    addToLibrary(file.name, `${ext} · Imported from device`, color, 'imported');
+    closeImportSheet();
+    showToast('Imported "' + file.name + '" — added to your library');
+  }
+  event.target.value = '';
+}
+
+function readPastedText(){
+  const raw = document.getElementById('pasteArea').value.trim();
+  if(!raw){ showToast('Paste something to read first'); return; }
+  const title = document.getElementById('pasteTitle').value.trim() || 'Pasted text';
+  const wordCount = raw.split(/\s+/).length;
+  const paragraphs = raw.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+
+  addToLibrary(title, `Pasted · ${wordCount} words`, "#6E3B4E", 'pasted');
+  closePasteSheet();
+  showToast('Added to your library');
+  openReaderWithContent(title, `Pasted · ${wordCount} words`, paragraphs.length ? paragraphs : [raw], 'Cleaned up and formatted for easy reading');
+}
+
+function saveFromWeb(){
+  const url = document.getElementById('webUrlInput').value.trim();
+  if(!url){ showToast('Paste a link first'); return; }
+  let hostname = 'the web';
+  try{ hostname = new URL(url.startsWith('http') ? url : 'https://' + url).hostname.replace('www.',''); }catch(e){}
+
+  const btn = document.getElementById('webSaveBtn');
+  btn.textContent = 'Fetching & cleaning...';
+
+  setTimeout(()=>{
+    const title = 'Article from ' + hostname;
+    const mockParagraphs = [
+      `This is a saved copy of the article from ${hostname}. Smart Reader Mode has stripped out the navigation bar, ads, pop-ups, and related-article widgets, leaving just the words that matter.`,
+      "Once saved, this article behaves exactly like anything else in your library: tap any word for an instant definition, select a paragraph to simplify or summarize it, and your reading position is remembered automatically.",
+      "You can also highlight passages, add notes, download it for offline reading, and it will sync across your other devices."
+    ];
+    addToLibrary(title, `Saved from ${hostname}`, "#B8873B", 'research');
+    closeWebSheet();
+    showToast('Saved from ' + hostname);
+    openReaderWithContent(title, `Saved from ${hostname} · Just now`, mockParagraphs, 'Ads, menus & clutter removed from this article');
+  }, 900);
+}
+
+/* ---------------- Profile screen ---------------- */
+function renderProfile(){
+  const planPrices = {monthly:'R29/mo', quarterly:'R69 / 3 mo', biannual:'R129 / 6 mo', yearly:'R189/yr'};
+  const summary = document.getElementById('planSummary');
+  const psName = document.getElementById('psName');
+  const psDetail = document.getElementById('psDetail');
+  const psButton = document.getElementById('psButton');
+
+  if(isPremium){
+    summary.classList.add('is-plus');
+    psName.textContent = 'EasyWord Plus';
+    const planLabel = plans.find(p => p.id === purchasedPlanId);
+    psDetail.textContent = planLabel ? `${planLabel.label} · ${planPrices[purchasedPlanId]}` : 'Unlimited everything';
+    psButton.textContent = 'Manage';
+    psButton.onclick = () => showToast('Manage or cancel your subscription');
+  } else {
+    summary.classList.remove('is-plus');
+    psName.textContent = 'Free plan';
+    psDetail.textContent = '30 saved words · 10 AI uses/day';
+    psButton.textContent = 'Upgrade';
+    psButton.onclick = openUpgrade;
+  }
+
+  document.getElementById('syncSub').textContent = isPremium
+    ? (syncEnabled ? 'Syncing across your devices' : 'Turned off')
+    : 'Plus feature — upgrade to enable';
+  document.getElementById('syncCheckbox').checked = syncEnabled;
+  document.getElementById('syncTrack').classList.toggle('on', syncEnabled);
+  document.getElementById('syncDot').classList.toggle('on', syncEnabled);
+  document.getElementById('ipadSub').textContent = syncEnabled ? 'Synced just now' : 'Sync disabled';
+  document.getElementById('webSub').textContent = syncEnabled ? 'Synced just now' : 'Sync disabled';
+
+  document.getElementById('backupSub').textContent = lastBackupTime ? 'Last backup: ' + lastBackupTime : 'Last backup: never';
+}
+
+function toggleSync(){
+  if(!isPremium){
+    document.getElementById('syncCheckbox').checked = false;
+    openUpgrade();
+    return;
+  }
+  syncEnabled = document.getElementById('syncCheckbox').checked;
+  showToast(syncEnabled ? 'Cross-device sync turned on' : 'Cross-device sync turned off');
+  renderProfile();
+}
+
+function backupNow(){
+  if(!isPremium){ openUpgrade(); return; }
+  showToast('Backing up your library...');
+  setTimeout(()=>{
+    lastBackupTime = 'just now';
+    showToast('Backup complete');
+    renderProfile();
+  }, 900);
+}
+
+function restoreBackup(){
+  if(!isPremium){ openUpgrade(); return; }
+  if(!lastBackupTime){ showToast('No backup found yet — back up first'); return; }
+  showToast('Restoring your latest backup...');
+  setTimeout(()=> showToast('Library restored'), 900);
+}
+
+function startPractice(startAt){
+  if(vocabWords.length === 0){
+    showToast('Save some words first to practice them');
+    return;
+  }
+  practiceIndex = typeof startAt === 'number' ? startAt : 0;
+  practiceRevealed = false;
+  document.getElementById('practiceOverlay').classList.add('open');
+  renderPracticeCard();
+}
+function closePractice(){
+  document.getElementById('practiceOverlay').classList.remove('open');
+}
+function renderPracticeCard(){
+  const body = document.getElementById('practiceBody');
+  const progress = document.getElementById('practiceProgress');
+
+  if(practiceIndex >= vocabWords.length){
+    body.innerHTML = `<div class="practice-done">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--gold-soft)" stroke-width="2" style="margin:0 auto;"><path d="M20 6L9 17l-5-5"/></svg>
+      <h3>Nice work</h3>
+      <p>You reviewed ${vocabWords.length} word${vocabWords.length===1?'':'s'}.</p>
+      <button class="practice-close-btn" onclick="startPractice(0)">Practice again</button>
+    </div>`;
+    progress.textContent = 'Done';
+    return;
+  }
+
+  progress.textContent = `${practiceIndex + 1} of ${vocabWords.length}`;
+  const word = vocabWords[practiceIndex];
+  const d = dictionary[word];
+
+  if(!practiceRevealed){
+    body.innerHTML = `
+      <div class="flashcard" onclick="revealCard()">
+        <div class="fc-word">${word}</div>
+        <div class="fc-pos">${d.pos}</div>
+        <div class="fc-hint">Tap to reveal meaning</div>
+      </div>
+    `;
+  } else {
+    body.innerHTML = `
+      <div class="flashcard" onclick="revealCard()">
+        <div class="fc-word" style="font-size:19px;">${word}</div>
+        <div class="fc-def">${d.meaning}</div>
+      </div>
+      <div class="practice-actions">
+        <button class="btn-again" onclick="nextCard()">Still learning</button>
+        <button class="btn-knew" onclick="nextCard()">Got it</button>
+      </div>
+    `;
+  }
+}
+function revealCard(){
+  practiceRevealed = true;
+  renderPracticeCard();
+}
+function nextCard(){
+  practiceIndex += 1;
+  practiceRevealed = false;
+  renderPracticeCard();
+}
+
+/* ---------------- Onboarding ---------------- */
+let onboardStep = 0;
+let authMode = 'signup';
+let selectedPrefs = new Set();
+const prefOptions = ["Fiction","Research","Business","Self-development","News","Education"];
+
+function showOnboardStep(n){
+  document.querySelectorAll('.onboard-step').forEach(s=>s.classList.remove('active'));
+  document.querySelector(`.onboard-step[data-step="${n}"]`).classList.add('active');
+  onboardStep = n;
+  if(n === 4) renderPrefChips();
+}
+function nextOnboard(){ showOnboardStep(onboardStep + 1); }
+function skipToAuth(mode){
+  authMode = mode;
+  updateAuthMode();
+  showOnboardStep(3);
+}
+function toggleAuthMode(){
+  authMode = authMode === 'signup' ? 'login' : 'signup';
+  updateAuthMode();
+}
+function updateAuthMode(){
+  const nameField = document.getElementById('authName');
+  if(authMode === 'signup'){
+    document.getElementById('authTitle').textContent = 'Create your account';
+    document.getElementById('authSub').textContent = 'Free to start — upgrade any time.';
+    document.getElementById('authSubmitBtn').textContent = 'Create account';
+    document.getElementById('authToggleText').textContent = 'Already have an account? Log in';
+    nameField.style.display = 'block';
+  } else {
+    document.getElementById('authTitle').textContent = 'Welcome back';
+    document.getElementById('authSub').textContent = 'Log in to continue reading.';
+    document.getElementById('authSubmitBtn').textContent = 'Log in';
+    document.getElementById('authToggleText').textContent = "Don't have an account? Sign up";
+    nameField.style.display = 'none';
+  }
+}
+function completeAuth(){
+  const email = document.getElementById('authEmail').value.trim();
+  if(!email){ showToast('Enter your email to continue'); return; }
+  if(authMode === 'login'){
+    finishOnboarding();
+  } else {
+    nextOnboard();
+  }
+}
+function renderPrefChips(){
+  const wrap = document.getElementById('prefChips');
+  wrap.innerHTML = prefOptions.map(name => `
+    <div class="pref-chip ${selectedPrefs.has(name) ? 'active' : ''}" onclick="togglePref(this,'${name}')">${name}</div>
+  `).join('');
+}
+function togglePref(el, name){
+  el.classList.toggle('active');
+  if(selectedPrefs.has(name)) selectedPrefs.delete(name);
+  else selectedPrefs.add(name);
+}
+function finishOnboarding(){
+  document.getElementById('screen-onboarding').style.display = 'none';
+  if(selectedPrefs.size > 0){
+    showToast('Library tailored to your interests');
+  }
+  switchTab('library');
+}
+function replayOnboarding(){
+  switchTab('library');
+  showOnboardStep(0);
+  authMode = 'signup';
+  updateAuthMode();
+  document.getElementById('screen-library').style.display = 'none';
+  document.getElementById('screen-onboarding').style.display = 'flex';
+}
+
+/* ---------------- Init ---------------- */
+renderTags();
+renderContinueShelf();
+renderCollections();
+renderLibraryList();
+renderArticle();
+renderVocab();
+syncBookmarkIcon();
+document.getElementById('screen-reader').style.display = 'none';
+document.getElementById('screen-vocab').style.display = 'none';
+document.getElementById('screen-library').style.display = 'none';
+document.getElementById('screen-onboarding').style.display = 'flex';
+</script>
+</body>
+</html>

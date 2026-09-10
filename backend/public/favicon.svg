@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <rect width="64" height="64" rx="16" fill="#4B6B4A"/>
+  <!-- Left Book Page -->
+  <path d="M17 21C17 18.2386 19.2386 16 22 16H32V46H22C19.2386 46 17 43.7614 17 41V21Z" fill="#FBF9F4"/>
+  <!-- Right Book Page -->
+  <path d="M47 21C47 18.2386 44.7614 16 42 16H32V46H42C44.7614 46 47 43.7614 47 41V21Z" fill="#F3EFE6"/>
+  <!-- Spine Divider -->
+  <line x1="32" y1="16" x2="32" y2="46" stroke="#D9D2C5" stroke-width="2"/>
+  <!-- Gold Bookmark Ribbon -->
+  <path d="M37 16V30L41.5 27L46 30V16H37Z" fill="#C28B38"/>
+</svg>

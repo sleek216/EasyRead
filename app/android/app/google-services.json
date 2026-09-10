@@ -1,0 +1,76 @@
+{
+  "project_info": {
+    "project_number": "525730588482",
+    "project_id": "easyread-5a7f4",
+    "storage_bucket": "easyread-5a7f4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:525730588482:android:a41c1bb567c7f2000f8adb",
+        "android_client_info": {
+          "package_name": "com.easyread.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "525730588482-rbvv4mpmrmm7bki4uat4um9f79tgtup2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA7nbX9Fov27QvXUF2Lqg0P2yT9OZtDybg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "525730588482-rbvv4mpmrmm7bki4uat4um9f79tgtup2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:525730588482:android:8ff2af9435fa34b80f8adb",
+        "android_client_info": {
+          "package_name": "com.example.book_reading"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "525730588482-r8l6v0end7sgli46q0suscdtg8d3d6o1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.book_reading",
+            "certificate_hash": "9b422bcc17fa247780cbeb67500d503f068cc9bc"
+          }
+        },
+        {
+          "client_id": "525730588482-rbvv4mpmrmm7bki4uat4um9f79tgtup2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA7nbX9Fov27QvXUF2Lqg0P2yT9OZtDybg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "525730588482-rbvv4mpmrmm7bki4uat4um9f79tgtup2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
