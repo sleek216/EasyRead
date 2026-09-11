@@ -159,16 +159,21 @@ class _ReaderScreenState extends State<ReaderScreen> {
       for (int i = 0; i < pIdx; i++) {
         final pText = provider.articleParagraphs[i];
         final lines = (pText.length / 40.0).ceil().clamp(1, 100);
-        estimatedOffset += (lines * 24.0) + 45.0;
+        estimatedOffset += (lines * 28.0) + 70.0;
       }
 
-      final maxScroll = _scrollController.position.maxScrollExtent;
-      final targetScroll = estimatedOffset.clamp(0.0, maxScroll);
-      _scrollController.jumpTo(targetScroll);
+      _scrollController.jumpTo(estimatedOffset);
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
+        if (!mounted) return;
+        final k2 = _paragraphKeys[pIdx];
+        if (k2?.currentContext != null) {
           tryEnsureVisible();
+        } else {
+          // Fallback: wait a bit more for layout if it jumped really far
+          Future.delayed(const Duration(milliseconds: 100), () {
+            if (mounted) tryEnsureVisible();
+          });
         }
       });
     }
@@ -485,7 +490,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
   void _runAiAction(int pIdx, String action, String passage, {String? targetLang}) async {
     final provider = context.read<EasyReadProvider>();
-    final isPremiumAction = (action == 'explain' || action == 'translate');
+    final isPremiumAction = (action == 'explain');
     final hasAi = provider.hasFeature('unlimited_ai') || provider.isPremium;
 
     // Must be logged in to use AI
@@ -502,6 +507,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
       setState(() => activeToolbarIndex = null);
       showEasyModalSheet(
         context: context,
+        force: true,
         builder: (ctx) => const UpgradeSheetContent(),
       );
       return;
@@ -513,6 +519,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
         showEasyToast(context, "You've used today's free AI lookups");
         showEasyModalSheet(
           context: context,
+          force: true,
           builder: (ctx) => const UpgradeSheetContent(),
         );
         return;

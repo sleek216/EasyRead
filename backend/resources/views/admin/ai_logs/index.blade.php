@@ -79,31 +79,31 @@
                             'passage' => $log->passage_text,
                             'response' => $log->response_text,
                         ]) }})">
-                        <td class="px-6 py-4.5">
-                            <span class="px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider bg-[#F3EFE6] text-[#4B6B4A] border border-[#E5DFD3]">
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-[#F3EFE6] text-[#4B6B4A] border border-[#E5DFD3]">
                                 {{ $log->action }}
                             </span>
                         </td>
-                        <td class="px-6 py-4.5 font-bold text-[#16241D] text-sm">
+                        <td class="px-6 py-4 font-bold text-[#16241D] text-sm">
                             {{ $log->user ? $log->user->name : 'Anonymous Reader' }}
                         </td>
-                        <td class="px-6 py-4.5 max-w-xs">
-                            <p class="truncate italic text-xs text-[#7A7569]">"{{ $log->passage_text }}"</p>
+                        <td class="px-6 py-4 max-w-xs">
+                            <p dir="auto" class="truncate italic text-xs text-[#7A7569]">"{{ $log->passage_text }}"</p>
                         </td>
-                        <td class="px-6 py-4.5 max-w-sm">
-                            <p class="line-clamp-2 text-xs font-medium text-[#16241D] bg-[#FBF9F4] p-2.5 rounded-xl border border-[#E5DFD3]">{{ $log->response_text }}</p>
+                        <td class="px-6 py-4 max-w-sm">
+                            <p dir="auto" class="line-clamp-2 text-xs font-medium text-[#16241D] bg-[#FBF9F4] p-2.5 rounded-xl border border-[#E5DFD3] leading-relaxed">{{ $log->response_text }}</p>
                         </td>
-                        <td class="px-6 py-4.5">
+                        <td class="px-6 py-4">
                             @if($log->is_cached)
-                                <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">CACHED</span>
+                                <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">CACHED</span>
                             @else
-                                <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-[#F3EFE6] text-[#7A7569] border border-[#E5DFD3]">LIVE</span>
+                                <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-[#F3EFE6] text-[#7A7569] border border-[#E5DFD3]">LIVE</span>
                             @endif
                         </td>
-                        <td class="px-6 py-4.5 text-xs text-[#7A7569] whitespace-nowrap">
+                        <td class="px-6 py-4 text-xs text-[#7A7569] whitespace-nowrap">
                             {{ $log->created_at->diffForHumans() }}
                         </td>
-                        <td class="px-6 py-4.5 text-right">
+                        <td class="px-6 py-4 text-right">
                             <button type="button" class="px-3 py-1.5 rounded-lg bg-[#F3EFE6] hover:bg-[#4B6B4A] text-[#16241D] hover:text-white text-xs font-bold transition flex items-center space-x-1 border border-[#E5DFD3] ml-auto">
                                 <span>View Output</span>
                                 <i class="fa-solid fa-expand text-[10px]"></i>

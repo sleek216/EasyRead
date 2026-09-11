@@ -382,18 +382,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 )
                               : GestureDetector(
                                   onTap: () async {
-                                    final allowed = await provider.checkFeatureAccess('cloud_sync');
-                                    if (!context.mounted) return;
-                                    if (!allowed) {
-                                      showFeatureUpgradeSheet(
-                                        context: context,
-                                        featureKey: 'cloud_sync',
-                                        featureTitle: "Cloud Backup & Multi-Device Sync",
-                                        featureDescription: "Back up your entire reading history, vocabulary cards, and book progress to the cloud to access anywhere.",
-                                        icon: Icons.cloud_sync_outlined,
-                                      );
-                                      return;
-                                    }
                                     showEasyToast(context, "Backing up your library & documents...");
                                     final res = await provider.backupNow();
                                     if (context.mounted) {
@@ -417,16 +405,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           isLast: true,
                           trailing: GestureDetector(
                             onTap: () async {
-                              final allowed = await provider.checkFeatureAccess('cloud_sync');
-                              if (!context.mounted) return;
-                              if (!allowed) {
-                                showFeatureUpgradeSheet(
-                                  context: context,
-                                  featureKey: 'cloud_sync',
-                                  featureTitle: "Cloud Backup & Multi-Device Sync",
-                                  featureDescription: "Restore previous library states, saved words, and reading progress across all your devices.",
-                                  icon: Icons.history,
-                                );
+                              if (provider.isBackupInProgress) {
+                                showEasyToast(context, "Backup is in progress, please wait...");
                                 return;
                               }
                               _showRestoreBackupsSheet(context, provider);

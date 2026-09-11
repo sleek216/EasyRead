@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/easy_word_provider.dart';
 import '../../services/api_service.dart';
@@ -45,30 +46,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   bool _obscureConfirmPass = true;
 
   void _showAutoDismissSuccess(String message) {
-    _bannerDismissTimer?.cancel();
     if (!mounted) return;
+    showEasyToast(context, message);
     setState(() {
-      _successMessage = message;
+      _successMessage = null;
       _errorMessage = null;
-    });
-    _bannerDismissTimer = Timer(const Duration(seconds: 5), () {
-      if (mounted) {
-        setState(() => _successMessage = null);
-      }
     });
   }
 
   void _showAutoDismissError(String message) {
-    _bannerDismissTimer?.cancel();
     if (!mounted) return;
+    showEasyToast(context, message);
     setState(() {
-      _errorMessage = message;
       _successMessage = null;
-    });
-    _bannerDismissTimer = Timer(const Duration(seconds: 5), () {
-      if (mounted) {
-        setState(() => _errorMessage = null);
-      }
+      _errorMessage = null; // Ensure banner stays hidden
     });
   }
 
@@ -77,6 +68,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.initState();
     if (widget.initialEmail != null && widget.initialEmail!.trim().isNotEmpty) {
       _emailCtrl.text = widget.initialEmail!.trim();
+    }
+    for (int i = 0; i < 6; i++) {
+      _otpFocusNodes[i].onKeyEvent = (node, event) {
+        if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.backspace) {
+          if (_otpControllers[i].text.isEmpty && i > 0) {
+            _otpFocusNodes[i - 1].requestFocus();
+            _otpControllers[i - 1].clear();
+            return KeyEventResult.handled;
+          }
+        }
+        return KeyEventResult.ignored;
+      };
     }
   }
 
@@ -227,7 +230,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     setState(() => _isLoading = false);
 
     if (res['success'] == true) {
-      showEasyToast(context, "New code sent to your email!");
       _showAutoDismissSuccess("New verification code sent to $email");
       _startResendCooldown(res['retry_after'] is int ? res['retry_after'] : 60);
       _startExpiryTimer(900);
@@ -302,126 +304,45 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.paper,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.ink, size: 20),
-          onPressed: () {
-            if (currentStep > 0) {
-              setState(() {
-                currentStep--;
-                _errorMessage = null;
-              });
-            } else {
-              Navigator.pop(context);
-            }
-          },
-        ),
-        title: Text(
-          "Reset Password",
-          style: AppTypography.fraunces(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textDark,
-          ),
-        ),
-        centerTitle: true,
-      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Error Banner
-              AnimatedSize(
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.easeInOut,
-                child: _errorMessage != null
-                    ? Container(
-                        margin: const EdgeInsets.only(bottom: 18),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFDE8E8),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFF8B4B4)),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.error_outline, color: Color(0xFFE02424), size: 18),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                _errorMessage!,
-                                style: AppTypography.inter(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF9B1C1C),
-                                ),
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () {
-                                _bannerDismissTimer?.cancel();
-                                setState(() => _errorMessage = null);
-                              },
-                              child: const Padding(
-                                padding: EdgeInsets.all(4.0),
-                                child: Icon(Icons.close, size: 16, color: Color(0xFF9B1C1C)),
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : const SizedBox.shrink(),
+              // Custom Header (Scrolls up with content)
+              Row(
+                children: [
+                  IconButton(
+                    padding: EdgeInsets.zero,
+                    alignment: Alignment.centerLeft,
+                    icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.ink, size: 20),
+                    onPressed: () {
+                      if (currentStep > 0) {
+                        setState(() {
+                          currentStep--;
+                          _errorMessage = null;
+                        });
+                      } else {
+                        Navigator.pop(context);
+                      }
+                    },
+                  ),
+                  Expanded(
+                    child: Text(
+                      "Reset Password",
+                      textAlign: TextAlign.center,
+                      style: AppTypography.fraunces(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textDark,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 48), // Balance spacing to keep text centered
+                ],
               ),
-
-              // Success Banner
-              AnimatedSize(
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.easeInOut,
-                child: (_successMessage != null && currentStep == 1)
-                    ? Container(
-                        margin: const EdgeInsets.only(bottom: 18),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFEDF7ED),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFB7EB8F)),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.check_circle_outline, color: AppColors.moss, size: 18),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                _successMessage!,
-                                style: AppTypography.inter(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.moss,
-                                ),
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () {
-                                _bannerDismissTimer?.cancel();
-                                setState(() => _successMessage = null);
-                              },
-                              child: const Padding(
-                                padding: EdgeInsets.all(4.0),
-                                child: Icon(Icons.close, size: 16, color: AppColors.moss),
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : const SizedBox.shrink(),
-              ),
-
+              const SizedBox(height: 24),
               // Animated Step Content
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 250),
@@ -729,7 +650,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         focusNode: _otpFocusNodes[index],
         keyboardType: TextInputType.number,
         textAlign: TextAlign.center,
-        maxLength: 1,
         style: const TextStyle(
           fontFamily: 'monospace',
           fontSize: 22,
@@ -755,10 +675,25 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
         ),
         inputFormatters: [
+          LengthLimitingTextInputFormatter(6),
           FilteringTextInputFormatter.digitsOnly,
         ],
         onChanged: (val) {
-          if (val.isNotEmpty) {
+          if (val.length > 1) {
+            // Handle paste
+            for (int i = 0; i < val.length && (index + i) < 6; i++) {
+              _otpControllers[index + i].text = val[i];
+            }
+            int nextFocus = index + val.length;
+            if (nextFocus < 6) {
+              _otpFocusNodes[nextFocus].requestFocus();
+            } else {
+              _otpFocusNodes[5].unfocus();
+              if (_currentOtp.length == 6) {
+                _handleVerifyOtp();
+              }
+            }
+          } else if (val.isNotEmpty) {
             if (index < 5) {
               _otpFocusNodes[index + 1].requestFocus();
             } else {

@@ -180,13 +180,19 @@
                 </div>
             </div>
 
-            <!-- Submit Buttons -->
-            <div class="flex items-center justify-end space-x-3 pt-4 border-t border-[#E5DFD3]">
-                <a href="{{ route('admin.books.index') }}" class="px-5 py-2.5 rounded-2xl border border-[#E5DFD3] text-[#7A7569] hover:bg-[#F3EFE6] text-xs font-bold transition">Cancel</a>
-                <button type="submit" class="px-6 py-2.5 rounded-2xl bg-[#4B6B4A] hover:bg-[#3A5439] active:scale-[0.99] text-white text-xs sm:text-sm font-bold transition shadow-xs flex items-center space-x-2">
-                    <i class="fa-solid fa-cloud-arrow-up text-xs"></i>
-                    <span>Extract & Publish Book</span>
-                </button>
+            <!-- Submit Buttons & Options -->
+            <div class="flex items-center justify-between pt-4 border-t border-[#E5DFD3]">
+                <label class="flex items-center space-x-2 cursor-pointer group">
+                    <input type="checkbox" name="send_notification" value="1" class="w-4 h-4 text-[#4B6B4A] bg-[#FDFBF7] border-[#E5DFD3] rounded focus:ring-[#4B6B4A]">
+                    <span class="text-xs font-semibold text-[#16241D] group-hover:text-[#4B6B4A] transition">Send push notification to app users</span>
+                </label>
+                <div class="flex items-center space-x-3">
+                    <a href="{{ route('admin.books.index') }}" class="px-5 py-2.5 rounded-2xl border border-[#E5DFD3] text-[#7A7569] hover:bg-[#F3EFE6] text-xs font-bold transition">Cancel</a>
+                    <button type="submit" class="px-6 py-2.5 rounded-2xl bg-[#4B6B4A] hover:bg-[#3A5439] active:scale-[0.99] text-white text-xs sm:text-sm font-bold transition shadow-xs flex items-center space-x-2">
+                        <i class="fa-solid fa-cloud-arrow-up text-xs"></i>
+                        <span>Extract & Publish Book</span>
+                    </button>
+                </div>
             </div>
         </form>
     </div>

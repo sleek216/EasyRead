@@ -448,7 +448,13 @@ class EasyReadProvider extends ChangeNotifier {
   bool hasFeature(String featureKey) {
     if (isAdmin) return true;
     if (isPremium) return true;
-    return false;
+    
+    // By default, all features (import, paste, etc.) are free EXCEPT for these two premium features
+    if (featureKey == 'words_screen' || featureKey == 'cloud_sync') {
+      return false;
+    }
+    
+    return true;
   }
 
   /// Real-time live check before performing a gated action
@@ -1400,12 +1406,23 @@ class EasyReadProvider extends ChangeNotifier {
     return res;
   }
 
-  // Real Backend Auth: Register
-  Future<Map<String, dynamic>> register(String name, String email, String password) async {
+  // Real Backend Auth: Send Signup OTP
+  Future<Map<String, dynamic>> sendSignupOtp(String name, String email, String password) async {
     isAuthLoading = true;
     notifyListeners();
 
-    final res = await ApiService.register(name, email, password, deviceName: _platformDeviceName);
+    final res = await ApiService.sendSignupOtp(name, email, password);
+    isAuthLoading = false;
+    notifyListeners();
+    return res;
+  }
+
+  // Real Backend Auth: Register
+  Future<Map<String, dynamic>> register(String name, String email, String password, String otp) async {
+    isAuthLoading = true;
+    notifyListeners();
+
+    final res = await ApiService.register(name, email, password, otp, deviceName: _platformDeviceName);
     isAuthLoading = false;
 
     if (res['success'] == true && res['user'] != null) {

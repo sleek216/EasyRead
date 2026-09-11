@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\AccountDeletion;
 use App\Models\Setting;
 use App\Mail\OtpPasswordResetMail;
+use App\Mail\VerifyEmailOtpMail;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -19,6 +20,65 @@ use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
 {
+    /**
+     * Send Signup OTP
+     */
+    public function sendSignupOtp(Request $request)
+    {
+        $inputEmail = strtolower(trim($request->input('email', '')));
+        if ($inputEmail !== '') {
+            User::onlyTrashed()->whereRaw('LOWER(TRIM(email)) = ?', [$inputEmail])->forceDelete();
+            
+            $existing = User::whereRaw('LOWER(TRIM(email)) = ?', [$inputEmail])->first();
+            if ($existing) {
+                return response()->json([
+                    'success' => false,
+                    'already_registered' => true,
+                    'field' => 'email',
+                    'message' => 'This email is already registered. Please log in to continue.',
+                ], 422);
+            }
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email:rfc|max:255|unique:users,email',
+            'password' => ['required', 'string', Password::min(6)],
+        ], [
+            'email.unique' => 'This email is already registered. Please log in to continue.',
+        ]);
+
+        $email = strtolower(trim($validated['email']));
+        
+        $key = 'send_signup_otp_' . $email;
+        if (RateLimiter::tooManyAttempts($key, 3)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Too many requests. Please try again after 15 minutes.',
+                'retry_after' => RateLimiter::availableIn($key),
+            ], 429);
+        }
+
+        $otp = (string)random_int(100000, 999999);
+        Cache::put('signup_otp_' . $email, $otp, now()->addMinutes(15));
+        RateLimiter::hit($key, 900);
+
+        try {
+            Mail::to($email)->queue(new VerifyEmailOtpMail($otp, trim($validated['name']), 'EasyRead'));
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send verification email. Please try again later.',
+            ], 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Verification code sent to ' . $email,
+            'retry_after' => 60,
+        ]);
+    }
+
     /**
      * User Registration
      * Creates new user account with secure defaults and returns Sanctum Bearer token.
@@ -49,17 +109,39 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email:rfc|max:255|unique:users,email',
             'password' => ['required', 'string', Password::min(6)],
+            'otp' => 'required|string|size:6',
             'device_name' => 'nullable|string|max:100',
         ], [
             'email.unique' => 'This email is already registered. Please log in to continue.',
+            'otp.required' => 'Verification code is required.',
         ]);
+
+        $email = strtolower(trim($validated['email']));
+
+        // Verify OTP from cache
+        $cacheKey = 'signup_otp_' . $email;
+        $cachedOtp = Cache::get($cacheKey);
+
+        if (!$cachedOtp || $cachedOtp !== trim($validated['otp'])) {
+            return response()->json([
+                'success' => false,
+                'field' => 'otp',
+                'message' => 'Invalid or expired verification code.',
+                'errors' => [
+                    'otp' => ['Invalid or expired verification code.'],
+                ],
+            ], 400);
+        }
+
+        // Clear OTP
+        Cache::forget($cacheKey);
 
         $deviceName = $request->input('device_name', 'Mobile Device');
         $freePlan = \App\Models\Plan::where('slug', 'free')->first();
 
         $user = User::create([
             'name' => trim($validated['name']),
-            'email' => strtolower(trim($validated['email'])),
+            'email' => $email,
             'password' => Hash::make($validated['password']),
             'role' => 'reader',
             'is_premium' => false,
@@ -442,24 +524,13 @@ class AuthController extends Controller
 
         $email = strtolower(trim($request->email));
 
-        // Check if user exists FIRST
+        // Check if user exists
         $user = User::whereRaw('LOWER(TRIM(email)) = ?', [$email])->first();
         if (!$user) {
-            // If no active user, check if they deleted it previously
-            $deletion = AccountDeletion::whereRaw('LOWER(TRIM(email)) = ?', [$email])->latest()->first();
-            if ($deletion) {
-                return response()->json([
-                    'success' => false,
-                    'account_deleted' => true,
-                    'field' => 'email',
-                    'message' => 'This account was previously deleted. Please sign up to create a new account.',
-                ], 403);
-            }
-
             return response()->json([
                 'success' => false,
                 'field' => 'email',
-                'message' => 'No account found with this email address.',
+                'message' => 'This email is not registered. Please sign up first.',
             ], 404);
         }
 
@@ -534,7 +605,7 @@ class AuthController extends Controller
         if (!$dispatched) {
             $this->configureMailFromSettings();
             try {
-                Mail::to($email)->send(new OtpPasswordResetMail($otp, $userName, $appName));
+                Mail::to($email)->queue(new OtpPasswordResetMail($otp, $userName, $appName));
             } catch (\Exception $e) {
                 \Log::error('OTP email send failed: ' . $e->getMessage());
                 return response()->json([

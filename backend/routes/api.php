@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\AiAssistantController;
 
 // Public Mobile Auth & Catalog APIs
 Route::post('/auth/register', [AuthController::class, 'register']);
+Route::post('/auth/send-signup-otp', [AuthController::class, 'sendSignupOtp']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/social', [AuthController::class, 'socialLogin']);
 Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);

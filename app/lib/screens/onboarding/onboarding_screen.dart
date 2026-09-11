@@ -1,5 +1,6 @@
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/easy_word_provider.dart';
 import '../../theme/app_colors.dart';
@@ -21,6 +22,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final TextEditingController nameCtrl = TextEditingController();
   final TextEditingController emailCtrl = TextEditingController();
   final TextEditingController passCtrl = TextEditingController();
+  final List<TextEditingController> otpCtrls = List.generate(6, (_) => TextEditingController());
+  final List<FocusNode> otpNodes = List.generate(6, (_) => FocusNode());
 
   // Inline validation error messages
   String? nameError;
@@ -38,10 +41,33 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final Set<String> selectedPrefs = {};
 
   @override
+  void initState() {
+    super.initState();
+    for (int i = 0; i < 6; i++) {
+      otpNodes[i].onKeyEvent = (node, event) {
+        if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.backspace) {
+          if (otpCtrls[i].text.isEmpty && i > 0) {
+            otpNodes[i - 1].requestFocus();
+            otpCtrls[i - 1].clear();
+            return KeyEventResult.handled;
+          }
+        }
+        return KeyEventResult.ignored;
+      };
+    }
+  }
+
+  @override
   void dispose() {
     nameCtrl.dispose();
     emailCtrl.dispose();
     passCtrl.dispose();
+    for (var c in otpCtrls) {
+      c.dispose();
+    }
+    for (var f in otpNodes) {
+      f.dispose();
+    }
     super.dispose();
   }
 
@@ -367,44 +393,72 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   // Form Validation with Inline Errors
   bool _validateInputs(bool isSignup) {
-    bool isValid = true;
     setState(() {
       nameError = null;
       emailError = null;
       passwordError = null;
-
-      if (isSignup) {
-        final name = nameCtrl.text.trim();
-        if (name.isEmpty) {
-          nameError = "Full name is required";
-          isValid = false;
-        } else if (name.length < 2) {
-          nameError = "Name must be at least 2 characters";
-          isValid = false;
-        }
-      }
-
-      final email = emailCtrl.text.trim();
-      final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-      if (email.isEmpty) {
-        emailError = "Email address is required";
-        isValid = false;
-      } else if (!emailRegex.hasMatch(email)) {
-        emailError = "Please enter a valid email (e.g. name@domain.com)";
-        isValid = false;
-      }
-
-      final pass = passCtrl.text;
-      if (pass.isEmpty) {
-        passwordError = "Password is required";
-        isValid = false;
-      } else if (pass.length < 6) {
-        passwordError = "Password must be at least 6 characters";
-        isValid = false;
-      }
     });
 
-    return isValid;
+    if (isSignup) {
+      final name = nameCtrl.text.trim();
+      if (name.isEmpty) {
+        showEasyToast(context, "Full name is required");
+        return false;
+      } else if (name.length < 2) {
+        showEasyToast(context, "Name must be at least 2 characters");
+        return false;
+      }
+    }
+
+    final email = emailCtrl.text.trim();
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (email.isEmpty) {
+      showEasyToast(context, "Email address is required");
+      return false;
+    } else if (!emailRegex.hasMatch(email)) {
+      showEasyToast(context, "Please enter a valid email (e.g. name@domain.com)");
+      return false;
+    }
+
+    final pass = passCtrl.text;
+    if (pass.isEmpty) {
+      showEasyToast(context, "Password is required");
+      return false;
+    } else if (pass.length < 6) {
+      showEasyToast(context, "Password must be at least 6 characters");
+      return false;
+    }
+
+    return true;
+  }
+
+  Future<void> _handleVerifySignupOtp(BuildContext ctx) async {
+    final otp = otpCtrls.map((c) => c.text).join();
+    if (otp.length < 6) {
+      showEasyToast(context, "Please enter all 6 digits.");
+      return;
+    }
+
+    final provider = ctx.read<EasyReadProvider>();
+    final res = await provider.register(nameCtrl.text.trim(), emailCtrl.text.trim(), passCtrl.text, otp);
+    
+    if (!mounted) return;
+    
+    if (res['success'] == true) {
+      showEasyToast(context, "Account created successfully! Welcome.");
+      if (provider.pendingSharedFilePath != null && provider.pendingSharedFilePath!.isNotEmpty) {
+        provider.finishOnboarding();
+      } else {
+        setState(() => step = 4);
+      }
+    } else {
+      final msg = res['message']?.toString() ?? "Verification failed.";
+      showEasyToast(context, msg);
+      if (res['field'] == 'otp') {
+        for (var c in otpCtrls) c.clear();
+        otpNodes[0].requestFocus();
+      }
+    }
   }
 
   // Handle Login & Signup API calls
@@ -413,27 +467,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     final provider = ctx.read<EasyReadProvider>();
     if (isSignup) {
-      final res = await provider.register(nameCtrl.text.trim(), emailCtrl.text.trim(), passCtrl.text);
+      final res = await provider.sendSignupOtp(nameCtrl.text.trim(), emailCtrl.text.trim(), passCtrl.text);
       if (!mounted) return;
       if (res['success'] == true) {
-        showEasyToast(context, "Account created successfully! Welcome.");
-        if (provider.pendingSharedFilePath != null && provider.pendingSharedFilePath!.isNotEmpty) {
-          // Immediately open the shared document into Reader screen
-          provider.finishOnboarding();
-        } else {
-          setState(() => step = 4); // Go to Reading Preferences step
-        }
-      } else {
-        final msg = res['message']?.toString() ?? "Registration failed. Try again.";
+        showEasyToast(context, res['message'] ?? "Verification code sent.");
         setState(() {
-          if (msg.toLowerCase().contains("email")) {
-            emailError = msg;
-          } else if (msg.toLowerCase().contains("password")) {
-            passwordError = msg;
-          } else {
-            emailError = msg;
-          }
+          authMode = 'signup_otp';
         });
+        // Auto focus first OTP field
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) otpNodes[0].requestFocus();
+        });
+      } else {
+        final msg = res['message']?.toString() ?? "Failed to send code. Try again.";
         showEasyToast(context, msg);
       }
     } else {
@@ -462,19 +508,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           return;
         }
 
-        setState(() {
-          if (field == 'password' || passErrMsg != null) {
-            passwordError = passErrMsg ?? msg;
-            emailError = null;
-          } else if (field == 'email' || emailErrMsg != null) {
-            emailError = emailErrMsg ?? msg;
-            passwordError = null;
-          } else {
-            emailError = msg;
-            passwordError = null;
-          }
-        });
-        showEasyToast(context, msg);
+        showEasyToast(context, passErrMsg ?? emailErrMsg ?? msg);
       }
     }
   }
@@ -511,6 +545,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   // Step 3: Auth Screen
   Widget _buildStep3Auth(BuildContext context) {
+    if (authMode == 'signup_otp') {
+      return _buildSignupOtp(context);
+    }
+
     final provider = context.watch<EasyReadProvider>();
     final isSignup = authMode == 'signup';
     final isLoading = provider.isAuthLoading;
@@ -1055,6 +1093,148 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildSignupOtp(BuildContext context) {
+    final provider = context.watch<EasyReadProvider>();
+    final isLoading = provider.isAuthLoading;
+
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            GestureDetector(
+              onTap: () => setState(() => authMode = 'signup'),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.paperSoft,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.line),
+                  ),
+                  child: const Icon(Icons.arrow_back_ios_new, size: 16, color: AppColors.textDark),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              "Verify your email",
+              style: AppTypography.fraunces(fontSize: 26, fontWeight: FontWeight.w600, color: AppColors.textDark),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              "We sent a 6-digit verification code to\n${emailCtrl.text.trim()}",
+              style: AppTypography.inter(fontSize: 14, color: AppColors.textMute, height: 1.5),
+            ),
+            const SizedBox(height: 32),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: List.generate(6, (index) {
+                return SizedBox(
+                  width: 44,
+                  height: 54,
+                  child: TextField(
+                    controller: otpCtrls[index],
+                    focusNode: otpNodes[index],
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.ink,
+                    ),
+                    decoration: InputDecoration(
+                      counterText: '',
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: EdgeInsets.zero,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: AppColors.line, width: 1.5),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: AppColors.line, width: 1.5),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: AppColors.moss, width: 2),
+                      ),
+                    ),
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(6),
+                      FilteringTextInputFormatter.digitsOnly,
+                    ],
+                    onChanged: (val) {
+                      if (val.length > 1) {
+                        // Handle paste
+                        for (int i = 0; i < val.length && (index + i) < 6; i++) {
+                          otpCtrls[index + i].text = val[i];
+                        }
+                        int nextFocus = index + val.length;
+                        if (nextFocus < 6) {
+                          otpNodes[nextFocus].requestFocus();
+                        } else {
+                          otpNodes[5].unfocus();
+                          String otpStr = otpCtrls.map((c) => c.text).join('');
+                          if (otpStr.length == 6) {
+                            _handleVerifySignupOtp(context);
+                          }
+                        }
+                      } else if (val.isNotEmpty) {
+                        if (index < 5) {
+                          otpNodes[index + 1].requestFocus();
+                        } else {
+                          otpNodes[index].unfocus();
+                          String otpStr = otpCtrls.map((c) => c.text).join('');
+                          if (otpStr.length == 6) {
+                            _handleVerifySignupOtp(context);
+                          }
+                        }
+                      } else {
+                        if (index > 0) {
+                          otpNodes[index - 1].requestFocus();
+                        }
+                      }
+                    },
+                  ),
+                );
+              }),
+            ),
+            const SizedBox(height: 40),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.ink,
+                foregroundColor: AppColors.paper,
+                minimumSize: const Size.fromHeight(54),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                elevation: 0,
+              ),
+              onPressed: isLoading ? null : () => _handleVerifySignupOtp(context),
+              child: isLoading
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                    )
+                  : Text(
+                      "Verify & Create Account",
+                      style: AppTypography.inter(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.paper,
+                      ),
+                    ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

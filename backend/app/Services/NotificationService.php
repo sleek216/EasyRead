@@ -424,10 +424,6 @@ class NotificationService
      */
     public static function broadcastNewBook($book): void
     {
-        if (Setting::get('enable_new_book_notifications', '1') !== '1') {
-            return;
-        }
-
         $title  = $book->title ?? 'New Book';
         $author = $book->author ? " by {$book->author}" : '';
 

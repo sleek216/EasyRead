@@ -1,18 +1,20 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/book_item.dart';
 
 class ApiService {
   static const List<String> _baseUrls = [
     // 'https://easyread.aibit.services/api', // Production Server
-    'http://172.31.2.125:8000/api', // Current Active LAN Wi-Fi IP
+    'http://172.31.2.224:8000/api', // Current Active LAN Wi-Fi IP
+    'http://172.31.2.125:8000/api', // Previous LAN Wi-Fi IP
     'http://172.31.2.46:8000/api',  // Previous LAN Wi-Fi IP
     'http://127.0.0.1:8000/api',    // Web / Desktop / Localhost
     'http://10.0.2.2:8000/api',     // Android Emulator
   ];
 
   // static String _activeBaseUrl = 'https://easyread.aibit.services/api';
-  static String _activeBaseUrl = 'http://172.31.2.125:8000/api';
+  static String _activeBaseUrl = 'http://172.31.2.224:8000/api';
   static String get baseUrl => _activeBaseUrl;
   
   static String? authToken;
@@ -73,8 +75,38 @@ class ApiService {
     }
   }
 
+  // Auth: Send Signup OTP
+  static Future<Map<String, dynamic>> sendSignupOtp(String name, String email, String password) async {
+    try {
+      final res = await _sendWithFailover(
+        (base) => http.post(
+          Uri.parse('$base/auth/send-signup-otp'),
+          headers: _headers,
+          body: jsonEncode({
+            'name': name.trim(),
+            'email': email.trim().toLowerCase(),
+            'password': password,
+          }),
+        ),
+      );
+      final data = jsonDecode(res.body);
+      if (res.statusCode == 200) {
+        return {'success': true, 'message': data['message'] ?? 'OTP sent'};
+      } else {
+        String msg = data['message'] ?? 'Failed to send OTP';
+        if (data['errors'] != null && data['errors'] is Map) {
+          final firstKey = (data['errors'] as Map).keys.first;
+          msg = (data['errors'][firstKey] as List).first.toString();
+        }
+        return {'success': false, 'message': msg};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Cannot connect to server. Check your connection.'};
+    }
+  }
+
   // Auth: Register
-  static Future<Map<String, dynamic>> register(String name, String email, String password, {String? deviceName}) async {
+  static Future<Map<String, dynamic>> register(String name, String email, String password, String otp, {String? deviceName}) async {
     try {
       final res = await _sendWithFailover(
         (base) => http.post(
@@ -84,6 +116,7 @@ class ApiService {
             'name': name.trim(),
             'email': email.trim().toLowerCase(),
             'password': password,
+            'otp': otp,
             'device_name': deviceName ?? 'Mobile App',
           }),
         ),
@@ -501,13 +534,16 @@ class ApiService {
   // Backup: Create Restore Point Snapshot with rich local payload
   static Future<Map<String, dynamic>> createBackup({Map<String, dynamic>? localPayload}) async {
     try {
+      // Offload massive JSON encoding to a background isolate to prevent UI freeze/ANR
+      final String encodedBody = await compute(jsonEncode, localPayload ?? {});
+
       final res = await _sendWithFailover(
         (base) => http.post(
           Uri.parse('$base/backups'),
           headers: _headers,
-          body: jsonEncode(localPayload ?? {}),
+          body: encodedBody,
         ),
-        timeout: const Duration(seconds: 15),
+        timeout: const Duration(seconds: 60), // Increased timeout for large payloads
       );
       return jsonDecode(res.body);
     } catch (_) {

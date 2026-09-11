@@ -186,10 +186,15 @@ class AdminBookController extends Controller
             }
         }
 
-        // Broadcast New Book Notification to all mobile users
-        \App\Services\NotificationService::broadcastNewBook($book);
+        // Conditionally Broadcast New Book Notification to all mobile users
+        if ($request->has('send_notification')) {
+            \App\Services\NotificationService::broadcastNewBook($book);
+            $msgSuffix = ', and notified to users';
+        } else {
+            $msgSuffix = '';
+        }
 
-        return redirect()->route('admin.books.index')->with('success', 'Book "' . $finalTitle . '" extracted, published, and notified to users successfully with ' . count($paragraphs) . ' paragraphs.');
+        return redirect()->route('admin.books.index')->with('success', 'Book "' . $finalTitle . '" extracted and published successfully' . $msgSuffix . ' with ' . count($paragraphs) . ' paragraphs.');
     }
 
     public function edit($id)
